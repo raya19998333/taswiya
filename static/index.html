@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام التسوية البنكية الآلية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--navy:#0f2c4d;--navy2:#1f4e78;--teal:#0e9b8e;--bg:#f4f7fb;
+    --green:#2e9e5b;--amber:#e08a1e;--yellow:#caa324;--blue:#2f74c0;--red:#d2415a;
+    --line:#e3e9f2;--ink:#1c2b3a;--mut:#6b7c93;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:18px 0}
+  header .wrap{display:flex;align-items:center;gap:16px}
+  .logo{width:44px;height:44px;border-radius:12px;background:var(--teal);display:grid;place-items:center;font-weight:800;font-size:20px}
+  header h1{font-size:20px;font-weight:800}
+  header p{font-size:12.5px;opacity:.8}
+  .userchip{margin-inline-start:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+  .userchip .role{background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px;font-size:12px}
+  .lnk{background:none;border:0;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;opacity:.85}
+  .lnk:hover{opacity:1;text-decoration:underline}
+  nav{background:#fff;border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:4px}
+  .navbtn{padding:14px 18px;border:0;background:none;font-family:inherit;font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent}
+  .navbtn.active{color:var(--navy);border-bottom-color:var(--teal)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:22px;box-shadow:0 1px 3px rgba(15,44,77,.04)}
+  .card h2{font-size:16px;margin-bottom:16px;color:var(--navy)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  label{font-size:13px;font-weight:500;color:var(--mut);display:block;margin-bottom:6px}
+  input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff}
+  .drop{border:1.5px dashed #c4d2e6;border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:.2s;background:#fafcff;font-size:13px;color:var(--mut)}
+  .drop:hover{border-color:var(--teal);background:#f0fbfa}
+  .drop.set{border-color:var(--teal);color:var(--navy);background:#eefcfa;font-weight:500}
+  .btn{margin-top:18px;width:100%;padding:14px;border:0;border-radius:12px;background:var(--teal);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+  .btn:hover{background:#0c8579}.btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy2)}
+  .btn.ghost:hover{background:#f0f5fb}
+  .btn.sm{width:auto;margin:0;padding:8px 16px;font-size:13px}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .stat{border-radius:14px;padding:16px;color:#fff}.stat .n{font-size:30px;font-weight:800;line-height:1}
+  .stat .t{font-size:12.5px;font-weight:500;margin-top:6px;opacity:.95}.stat .s{font-size:11px;opacity:.85;margin-top:3px}
+  .s-green{background:var(--green)}.s-amber{background:var(--amber)}.s-yellow{background:var(--yellow)}.s-blue{background:var(--blue)}.s-red{background:var(--red)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:13px;cursor:pointer;color:var(--mut)}
+  .tab.active{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#f5f8fc;color:var(--navy);padding:10px;text-align:right;font-weight:700;border-bottom:2px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid #eef2f7}tr:hover td{background:#fafcff}
+  .hidden{display:none}.muted{color:var(--mut);font-size:13px;text-align:center;padding:24px}
+  .spin{display:inline-block;width:16px;height:16px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:r .7s linear infinite;vertical-align:-3px;margin-inline-start:8px}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .err{background:#fdecef;color:var(--red);padding:12px;border-radius:10px;font-size:13px;margin-top:14px}
+  .chartbox{height:240px}
+  .badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .b-draft{background:#fff3d6;color:#9a6b00}.b-approved{background:#dcf5e6;color:#1d7a43}
+  .login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,var(--navy),var(--navy2))}
+  .login-box{background:#fff;border-radius:18px;padding:34px;width:360px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+  .login-box .logo{margin:0 auto 14px}.login-box h2{text-align:center;color:var(--navy);margin-bottom:4px}
+  .login-box .sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:22px}
+  .hint{margin-top:16px;font-size:11.5px;color:var(--mut);text-align:center;line-height:1.8}
+  .clickrow{cursor:pointer}
+  @media(max-width:760px){.grid2,.cards{grid-template-columns:1fr 1fr}.stat .n{font-size:24px}}
+</style>
+</head>
+<body>
+
+
+<!-- التطبيق -->
+<div id="appView" class="hidden">
+  <header><div class="wrap">
+    <div class="logo">ت</div>
+    <div><h1>نظام التسوية البنكية الآلية</h1><p>مطابقة دفتر الخزينة مع كشف البنك</p></div>
+    <div class="userchip">
+      <span id="uName"></span><span class="role" id="uRole"></span>
+      <button class="lnk" onclick="logout()">خروج</button>
+    </div>
+  </div></header>
+  <nav><div class="wrap">
+    <button class="navbtn active" id="nav-new" onclick="go('new')">تسوية جديدة</button>
+    <button class="navbtn" id="nav-hist" onclick="go('hist')">السجل</button>
+    <button class="navbtn hidden" id="nav-audit" onclick="go('audit')">سجل التدقيق</button>
+  </div></nav>
+
+  <div class="wrap">
+    <div id="page-new">
+      <div class="card">
+        <h2>① رفع الملفات</h2>
+        <div class="grid2">
+          <div>
+            <label>دفتر الخزينة (Excel)</label>
+            <div class="drop" id="dLedger" onclick="ledgerIn.click()">اضغطي لاختيار ملف الخزينة</div>
+            <input type="file" id="ledgerIn" accept=".xlsx,.xls" class="hidden">
+            <label style="margin-top:14px">الشهر / الورقة</label>
+            <select id="sheetSel"><option>— ارفعي الملف أولاً —</option></select>
+          </div>
+          <div>
+            <label>كشف الحساب البنكي (Excel)</label>
+            <div class="drop" id="dBank" onclick="bankIn.click()">اضغطي لاختيار كشف البنك</div>
+            <input type="file" id="bankIn" accept=".xlsx,.xls" class="hidden">
+            <p style="font-size:12px;color:var(--mut);margin-top:14px">الأعمدة المتوقعة: <b>المرجع، التاريخ، المبلغ، البيان</b>.</p>
+          </div>
+        </div>
+        <button class="btn" id="runBtn" disabled onclick="run()">تشغيل المطابقة</button>
+        <div id="err" class="err hidden"></div>
+      </div>
+      <div id="results" class="hidden"></div>
+    </div>
+
+    <div id="page-hist" class="hidden">
+      <div class="card"><h2>سجل التسويات</h2><div id="histBox"></div></div>
+      <div id="runDetail"></div>
+    </div>
+
+    <div id="page-audit" class="hidden">
+      <div class="card"><h2>سجل التدقيق</h2><div id="auditBox"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN_KEY = 'taswiya_token';
+let TOKEN = localStorage.getItem(TOKEN_KEY);
+let USER = null, result=null, chart=null;
+const ledgerIn=document.getElementById('ledgerIn'), bankIn=document.getElementById('bankIn');
+const META={matched:{t:'دفعات مطابقة',c:'s-green',cl:'#2e9e5b'},amount_diff:{t:'فرق في الإجمالي',c:'s-amber',cl:'#e08a1e'},
+  ledger_only:{t:'في النظام فقط',c:'s-yellow',cl:'#caa324'},bank_only:{t:'في البنك فقط',c:'s-blue',cl:'#2f74c0'},
+  duplicates:{t:'صرف مكرر',c:'s-red',cl:'#d2415a'}};
+const fmt=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:3});
+const H=()=>({'Authorization':'Bearer '+TOKEN});
+
+async function initApp(){
+  if(!TOKEN){
+    location.href = '/';
+    return;
+  }
+  try {
+    const res = await fetch('/me',{headers:H()});
+    if(!res.ok) throw new Error('unauthorized');
+    USER = await res.json();
+    document.getElementById('uName').textContent = USER.full_name;
+    document.getElementById('uRole').textContent = roleAr(USER.role);
+    if(USER.role === 'admin') document.getElementById('nav-audit').classList.remove('hidden');
+    document.getElementById('appView').classList.remove('hidden');
+  } catch (err) {
+    localStorage.removeItem(TOKEN_KEY);
+    location.href = '/';
+  }
+}
+
+initApp();
+
+function logout(){
+  localStorage.removeItem(TOKEN_KEY);
+  location.href = '/';
+}
+function roleAr(r){return {admin:'مدير النظام',supervisor:'مشرف',entry:'موظف إدخال'}[r]||r;}
+function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.remove('hidden');}
+
+function go(pg){
+  ['new','hist','audit'].forEach(x=>{
+    document.getElementById('page-'+x).classList.toggle('hidden',x!==pg);
+    document.getElementById('nav-'+x).classList.toggle('active',x===pg);});
+  if(pg==='hist')loadHistory();
+  if(pg==='audit')loadAudit();
+}
+
+ledgerIn.onchange=async()=>{const f=ledgerIn.files[0];if(!f)return;setDrop('dLedger',f.name);
+  const fd=new FormData();fd.append('file',f);
+  const r=await fetch('/sheets',{method:'POST',headers:H(),body:fd});const j=await r.json();
+  document.getElementById('sheetSel').innerHTML=j.sheets.map(s=>`<option>${s}</option>`).join('');checkReady();};
+bankIn.onchange=()=>{if(bankIn.files[0]){setDrop('dBank',bankIn.files[0].name);checkReady();}};
+function setDrop(id,name){const d=document.getElementById(id);d.textContent='✓ '+name;d.classList.add('set');}
+function checkReady(){document.getElementById('runBtn').disabled=!(ledgerIn.files[0]&&bankIn.files[0]);}
+
+async function run(){
+  document.getElementById('err').classList.add('hidden');
+  const btn=document.getElementById('runBtn');
+  btn.disabled=true;btn.innerHTML='جارٍ المطابقة<span class="spin"></span>';
+  const fd=new FormData();fd.append('ledger',ledgerIn.files[0]);fd.append('bank',bankIn.files[0]);
+  fd.append('ledger_sheet',document.getElementById('sheetSel').value);
+  try{const r=await fetch('/reconcile',{method:'POST',headers:H(),body:fd});
+    if(!r.ok){const j=await r.json();throw new Error(j.detail||'خطأ');}
+    result=await r.json();renderResult();
+  }catch(e){showErr('err','تعذّرت المطابقة: '+e.message);}
+  btn.disabled=false;btn.textContent='تشغيل المطابقة';
+}
+
+function statCards(s){const subs={matched:s.matched_total,amount_diff:null,ledger_only:s.ledger_only_total,bank_only:s.bank_only_total,duplicates:s.duplicates_total};
+  return Object.keys(META).map(k=>`<div class="stat ${META[k].c}"><div class="n">${s[k]}</div><div class="t">${META[k].t}</div>
+    <div class="s">${subs[k]!=null?fmt(subs[k])+' ر.ع':'&nbsp;'}</div></div>`).join('');}
+
+function renderResult(){
+  const s=result.summary;
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').innerHTML=`
+    <div class="card"><h2>② الملخص <span class="badge b-draft">مسودة — بانتظار الاعتماد</span></h2>
+      <div class="cards">${statCards(s)}</div></div>
+    <div class="card"><h2>③ توزيع الحالات</h2><div class="chartbox"><canvas id="chart"></canvas></div></div>
+    <div class="card"><h2>④ التفاصيل</h2><div class="tabs" id="tabs"></div><div id="tableBox"></div>
+      <button class="btn ghost" onclick="download()" style="margin-top:18px">⬇ تحميل تقرير Excel الملوّن</button></div>`;
+  drawChart(s);
+  buildTabs(result,'tabs','tableBox');
+}
+
+function drawChart(s){if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('chart'),{type:'doughnut',
+    data:{labels:Object.values(META).map(m=>m.t),datasets:[{data:Object.keys(META).map(k=>s[k]),
+      backgroundColor:Object.values(META).map(m=>m.cl),borderWidth:2,borderColor:'#fff'}]},
+    options:{plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:13},padding:14}}},cutout:'62%',maintainAspectRatio:false}});}
+
+function buildTabs(data,tabsId,boxId){
+  const counts={matched:(data.matched||[]).length,amount_diff:(data.amount_diff||[]).length,
+    ledger_only:(data.ledger_only||[]).length,bank_only:(data.bank_only||[]).length,duplicates:(data.duplicates||[]).length};
+  document.getElementById(tabsId).dataset.box=boxId;
+  document.getElementById(tabsId).innerHTML=Object.keys(META).map((k,i)=>
+    `<button class="tab ${i===0?'active':''}" onclick="showTab('${k}','${boxId}',this)">${META[k].t} (${counts[k]||0})</button>`).join('');
+  window['__data_'+boxId]=data;showTab('matched',boxId);
+}
+function showTab(k,boxId,el){
+  const data=window['__data_'+boxId];
+  if(el){el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');}
+  const box=document.getElementById(boxId);const rows=data[k]||[];
+  if(!rows.length){box.innerHTML='<div class="muted">لا توجد سجلات في هذه الفئة 👌</div>';return;}
+  let head,body;
+  if(k==='duplicates'){head=['التاريخ','الرقم المرجعي','المبلغ','البيان','المستفيد'];
+    body=rows.map(e=>[e.txn_date||'',e.ref||'',fmt(Math.abs(e.amount)),e.description,e.employee||'']);}
+  else if(k==='bank_only'){head=['الرقم المرجعي','إجمالي البنك','البيان'];
+    body=rows.map(b=>[b.ref,fmt(b.bank_total),b.description]);}
+  else{head=['الرقم المرجعي','إجمالي النظام','إجمالي البنك','الفرق','البيان'];
+    body=rows.map(b=>[b.ref,fmt(b.ledger_total),fmt(b.bank_total),fmt(b.diff),b.description]);}
+  box.innerHTML=`<table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+async function download(){
+  const fd=new FormData();fd.append('ledger',ledgerIn.files[0]);fd.append('bank',bankIn.files[0]);
+  fd.append('ledger_sheet',document.getElementById('sheetSel').value);
+  const r=await fetch('/report',{method:'POST',headers:H(),body:fd});const blob=await r.blob();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='تقرير_المطابقة_البنكية.xlsx';a.click();
+}
+
+async function loadHistory(){
+  document.getElementById('runDetail').innerHTML='';
+  const r=await fetch('/runs',{headers:H()});const runs=(await r.json()).runs;
+  if(!runs.length){document.getElementById('histBox').innerHTML='<div class="muted">لا توجد تسويات بعد</div>';return;}
+  document.getElementById('histBox').innerHTML=`<table><thead><tr>
+    <th>#</th><th>الشهر</th><th>التاريخ</th><th>المنشئ</th><th>مطابقة</th><th>تنبيهات</th><th>الحالة</th></tr></thead>
+    <tbody>${runs.map(r=>{const alerts=r.amount_diff+r.ledger_only+r.bank_only+r.duplicates;
+      return `<tr class="clickrow" onclick="openRun(${r.id})"><td>${r.id}</td><td>${r.sheet||''}</td>
+      <td>${(r.created_at||'').slice(0,16).replace('T',' ')}</td><td>${r.creator||''}</td>
+      <td>${r.matched}</td><td>${alerts}</td>
+      <td><span class="badge b-${r.status}">${r.status==='approved'?'معتمدة':'مسودة'}</span></td></tr>`;}).join('')}</tbody></table>`;
+}
+async function openRun(id){
+  const r=await fetch('/runs/'+id,{headers:H()});const j=await r.json();const run=j.run;
+  const s={matched:run.matched,amount_diff:run.amount_diff,ledger_only:run.ledger_only,bank_only:run.bank_only,
+    duplicates:run.duplicates,matched_total:run.matched_total};
+  const canApprove=USER.role!=='entry'&&run.status==='draft';
+  document.getElementById('runDetail').innerHTML=`
+    <div class="card"><h2>تسوية #${run.id} — ${run.sheet||''}
+      <span class="badge b-${run.status}">${run.status==='approved'?'معتمدة':'مسودة'}</span></h2>
+      <div class="cards">${statCards(s)}</div>
+      ${run.approved_at?`<p class="muted" style="text-align:right">اعتُمدت بتاريخ ${run.approved_at.slice(0,16).replace('T',' ')}</p>`:''}
+      ${canApprove?`<button class="btn sm" style="margin-top:14px" onclick="approve(${run.id})">✓ اعتماد التسوية</button>`:''}
+    </div>
+    <div class="card"><h2>التفاصيل</h2><div class="tabs" id="dtabs"></div><div id="dbox"></div></div>`;
+  const data={matched:j.items.matched||[],amount_diff:j.items.amount_diff||[],ledger_only:j.items.ledger_only||[],
+    bank_only:j.items.bank_only||[],duplicates:j.items.duplicates||[]};
+  buildTabs(data,'dtabs','dbox');
+  document.getElementById('runDetail').scrollIntoView({behavior:'smooth'});
+}
+async function approve(id){
+  const r=await fetch('/runs/'+id+'/approve',{method:'POST',headers:H()});
+  if(r.ok){loadHistory();openRun(id);}else{alert((await r.json()).detail);}
+}
+
+async function loadAudit(){
+  const r=await fetch('/audit',{headers:H()});if(!r.ok)return;
+  const a=(await r.json()).audit;const act={login:'دخول',reconcile:'تشغيل تسوية',approve:'اعتماد',export:'تصدير'};
+  document.getElementById('auditBox').innerHTML=`<table><thead><tr><th>#</th><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>الوقت</th></tr></thead>
+    <tbody>${a.map(x=>`<tr><td>${x.id}</td><td>${x.username||''}</td><td>${act[x.action]||x.action}</td>
+    <td>${x.detail||''}</td><td>${(x.created_at||'').slice(0,16).replace('T',' ')}</td></tr>`).join('')}</tbody></table>`;
+}
+</script>
+</body>
+</html>
