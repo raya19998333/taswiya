@@ -8,7 +8,8 @@ from datetime import datetime
 from pathlib import Path
 import openpyxl
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from reconciliation import parse_ledger, parse_bank, reconcile
 from report import build_report
@@ -17,7 +18,12 @@ from auth import login, current_user, require_role
 
 app = FastAPI(title="نظام التسوية البنكية الآلية")
 BASE = Path(__file__).parent
+STATIC_DIR = BASE / "static"
 init_db()
+
+# Mount static files
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 def _read(upload: UploadFile, parser, sheet=None):
@@ -31,11 +37,17 @@ def _read(upload: UploadFile, parser, sheet=None):
 # ───────────── الواجهة ─────────────
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return (BASE / "static" / "login.html").read_text(encoding="utf-8")
+    login_file = STATIC_DIR / "login.html"
+    if login_file.exists():
+        return login_file.read_text(encoding="utf-8")
+    return "<h1>Error: login.html not found</h1>"
 
 @app.get("/app", response_class=HTMLResponse)
 def app_page():
-    return (BASE / "static" / "index.html").read_text(encoding="utf-8")
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return index_file.read_text(encoding="utf-8")
+    return "<h1>Error: index.html not found</h1>"
 
 
 # ───────────── المصادقة ─────────────
