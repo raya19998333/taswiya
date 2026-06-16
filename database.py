@@ -70,6 +70,25 @@ CREATE TABLE IF NOT EXISTS audit_log (
   detail     TEXT,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS vouchers (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  voucher_no    TEXT,
+  voucher_date  TEXT NOT NULL,
+  amount        REAL NOT NULL,
+  currency      TEXT NOT NULL DEFAULT 'ر.ع',
+  beneficiary   TEXT NOT NULL,
+  description   TEXT,
+  file_path     TEXT,
+  file_name     TEXT,
+  status        TEXT NOT NULL DEFAULT 'draft'
+                  CHECK(status IN ('draft','approved','cancelled')),
+  created_by    INTEGER NOT NULL REFERENCES users(id),
+  created_at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_vouchers_no ON vouchers(voucher_no);
+CREATE INDEX IF NOT EXISTS idx_vouchers_beneficiary ON vouchers(beneficiary);
+CREATE INDEX IF NOT EXISTS idx_vouchers_date ON vouchers(voucher_date);
 """
 
 

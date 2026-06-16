@@ -55,7 +55,14 @@
   .err{background:#fdecef;color:var(--red);padding:12px;border-radius:10px;font-size:13px;margin-top:14px}
   .chartbox{height:240px}
   .badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
-  .b-draft{background:#fff3d6;color:#9a6b00}.b-approved{background:#dcf5e6;color:#1d7a43}
+  .b-draft{background:#fff3d6;color:#9a6b00}.b-approved{background:#dcf5e6;color:#1d7a43}.b-cancelled{background:#fdecef;color:var(--red)}
+  textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;resize:vertical}
+  .filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .filters .full{grid-column:1/-1}
+  .modal-bg{position:fixed;inset:0;background:rgba(15,44,77,.55);display:grid;place-items:center;z-index:50}
+  .modal{background:#fff;border-radius:14px;padding:18px;max-width:90vw;max-height:90vh;overflow:auto}
+  .modal img,.modal embed{max-width:80vw;max-height:80vh}
+  @media(max-width:760px){.filters{grid-template-columns:1fr 1fr}}
   .login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,var(--navy),var(--navy2))}
   .login-box{background:#fff;border-radius:18px;padding:34px;width:360px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
   .login-box .logo{margin:0 auto 14px}.login-box h2{text-align:center;color:var(--navy);margin-bottom:4px}
@@ -81,6 +88,7 @@
   <nav><div class="wrap">
     <button class="navbtn active" id="nav-new" onclick="go('new')">تسوية جديدة</button>
     <button class="navbtn" id="nav-hist" onclick="go('hist')">السجل</button>
+    <button class="navbtn" id="nav-vouchers" onclick="go('vouchers')">سندات الصرف</button>
     <button class="navbtn hidden" id="nav-audit" onclick="go('audit')">سجل التدقيق</button>
   </div></nav>
 
@@ -114,11 +122,53 @@
       <div id="runDetail"></div>
     </div>
 
+    <div id="page-vouchers" class="hidden">
+      <div class="card">
+        <h2>إضافة سند صرف جديد</h2>
+        <div class="grid2">
+          <div>
+            <label>رقم السند (اختياري)</label>
+            <input type="text" id="vNo" placeholder="يُترك فارغاً للترقيم التلقائي">
+            <label style="margin-top:14px">التاريخ</label>
+            <input type="date" id="vDate">
+            <label style="margin-top:14px">المبلغ</label>
+            <input type="number" id="vAmount" step="0.001" placeholder="0.000">
+          </div>
+          <div>
+            <label>المستفيد</label>
+            <input type="text" id="vBeneficiary" placeholder="اسم الشخص / الجهة / الشركة">
+            <label style="margin-top:14px">بيان الصرف</label>
+            <textarea id="vDesc" rows="3" placeholder="سبب الصرف أو الوصف"></textarea>
+            <label style="margin-top:14px">مرفق السند (PDF أو صورة)</label>
+            <div class="drop" id="dVoucher" onclick="voucherFileIn.click()">اضغطي لاختيار ملف السند</div>
+            <input type="file" id="voucherFileIn" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+          </div>
+        </div>
+        <button class="btn" id="addVoucherBtn" onclick="addVoucher()">حفظ السند</button>
+        <div id="vErr" class="err hidden"></div>
+      </div>
+
+      <div class="card">
+        <h2>أرشيف السندات</h2>
+        <div class="filters">
+          <input type="text" id="fQ" placeholder="بحث: رقم السند / المستفيد / البيان">
+          <input type="date" id="fFrom" title="من تاريخ">
+          <input type="date" id="fTo" title="إلى تاريخ">
+          <input type="number" id="fMin" placeholder="أقل مبلغ">
+          <input type="number" id="fMax" placeholder="أعلى مبلغ">
+        </div>
+        <button class="btn ghost sm" onclick="loadVouchers()">بحث</button>
+        <div id="vouchersBox" style="margin-top:16px"></div>
+      </div>
+    </div>
+
     <div id="page-audit" class="hidden">
       <div class="card"><h2>سجل التدقيق</h2><div id="auditBox"></div></div>
     </div>
   </div>
 </div>
+
+<div id="filePreview" class="hidden"></div>
 
 <script>
 const TOKEN_KEY = 'taswiya_token';
@@ -160,10 +210,11 @@ function roleAr(r){return {admin:'مدير النظام',supervisor:'مشرف',e
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.remove('hidden');}
 
 function go(pg){
-  ['new','hist','audit'].forEach(x=>{
+  ['new','hist','vouchers','audit'].forEach(x=>{
     document.getElementById('page-'+x).classList.toggle('hidden',x!==pg);
     document.getElementById('nav-'+x).classList.toggle('active',x===pg);});
   if(pg==='hist')loadHistory();
+  if(pg==='vouchers')loadVouchers();
   if(pg==='audit')loadAudit();
 }
 
@@ -259,12 +310,17 @@ async function openRun(id){
   const s={matched:run.matched,amount_diff:run.amount_diff,ledger_only:run.ledger_only,bank_only:run.bank_only,
     duplicates:run.duplicates,matched_total:run.matched_total};
   const canApprove=USER.role!=='entry'&&run.status==='draft';
+  const canManage = USER.role==='admin';
   document.getElementById('runDetail').innerHTML=`
     <div class="card"><h2>تسوية #${run.id} — ${run.sheet||''}
       <span class="badge b-${run.status}">${run.status==='approved'?'معتمدة':'مسودة'}</span></h2>
       <div class="cards">${statCards(s)}</div>
       ${run.approved_at?`<p class="muted" style="text-align:right">اعتُمدت بتاريخ ${run.approved_at.slice(0,16).replace('T',' ')}</p>`:''}
-      ${canApprove?`<button class="btn sm" style="margin-top:14px" onclick="approve(${run.id})">✓ اعتماد التسوية</button>`:''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        ${canApprove?`<button class="btn sm" onclick="approve(${run.id})">✓ اعتماد التسوية</button>`:''}
+        ${canManage?`<button class="btn sm ghost" onclick="editRun(${run.id})">✎ تعديل التسوية</button>`:''}
+        ${canManage?`<button class="btn sm danger" onclick="deleteRun(${run.id})">🗑 حذف التسوية</button>`:''}
+      </div>
     </div>
     <div class="card"><h2>التفاصيل</h2><div class="tabs" id="dtabs"></div><div id="dbox"></div></div>`;
   const data={matched:j.items.matched||[],amount_diff:j.items.amount_diff||[],ledger_only:j.items.ledger_only||[],
@@ -275,6 +331,122 @@ async function openRun(id){
 async function approve(id){
   const r=await fetch('/runs/'+id+'/approve',{method:'POST',headers:H()});
   if(r.ok){loadHistory();openRun(id);}else{alert((await r.json()).detail);}
+}
+
+async function deleteRun(id){
+  if(!confirm('هل أنت متأكد من حذف هذه التسوية؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+  const r=await fetch('/runs/'+id,{method:'DELETE',headers:H()});
+  if(r.ok){loadHistory();document.getElementById('runDetail').innerHTML='';}
+  else{alert((await r.json()).detail);}
+}
+
+async function editRun(id){
+  const currentSheet = prompt('أدخل اسم الورقة الجديدة أو اتركها كما هي:');
+  if(currentSheet === null) return;
+  const currentLedger = prompt('أدخل اسم ملف الخزينة الجديد أو اتركه كما هو:');
+  if(currentLedger === null) return;
+  const currentBank = prompt('أدخل اسم ملف البنك الجديد أو اتركه كما هو:');
+  if(currentBank === null) return;
+  const payload = {};
+  if(currentSheet.trim() !== '') payload.sheet = currentSheet.trim();
+  if(currentLedger.trim() !== '') payload.ledger_name = currentLedger.trim();
+  if(currentBank.trim() !== '') payload.bank_name = currentBank.trim();
+  if(!Object.keys(payload).length){
+    alert('لم يتم تقديم بيانات جديدة للتعديل.');
+    return;
+  }
+  const r = await fetch('/runs/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(r.ok){loadHistory();openRun(id);}else{alert((await r.json()).detail);}
+}
+
+const voucherFileIn=document.getElementById('voucherFileIn');
+voucherFileIn.onchange=()=>{if(voucherFileIn.files[0])setDrop('dVoucher',voucherFileIn.files[0].name);};
+
+async function addVoucher(){
+  document.getElementById('vErr').classList.add('hidden');
+  const date=document.getElementById('vDate').value;
+  const amount=document.getElementById('vAmount').value;
+  const beneficiary=document.getElementById('vBeneficiary').value.trim();
+  if(!date||!amount||!beneficiary){showErr('vErr','التاريخ والمبلغ والمستفيد حقول مطلوبة');return;}
+  const btn=document.getElementById('addVoucherBtn');
+  btn.disabled=true;btn.innerHTML='جارٍ الحفظ<span class="spin"></span>';
+  const fd=new FormData();
+  fd.append('voucher_no',document.getElementById('vNo').value.trim());
+  fd.append('voucher_date',date);
+  fd.append('amount',amount);
+  fd.append('beneficiary',beneficiary);
+  fd.append('description',document.getElementById('vDesc').value.trim());
+  if(voucherFileIn.files[0])fd.append('file',voucherFileIn.files[0]);
+  try{
+    const r=await fetch('/vouchers',{method:'POST',headers:H(),body:fd});
+    if(!r.ok){const j=await r.json();throw new Error(j.detail||'خطأ');}
+    document.getElementById('vNo').value='';document.getElementById('vDate').value='';
+    document.getElementById('vAmount').value='';document.getElementById('vBeneficiary').value='';
+    document.getElementById('vDesc').value='';voucherFileIn.value='';
+    document.getElementById('dVoucher').textContent='اضغطي لاختيار ملف السند';
+    document.getElementById('dVoucher').classList.remove('set');
+    loadVouchers();
+  }catch(e){showErr('vErr','تعذّر حفظ السند: '+e.message);}
+  btn.disabled=false;btn.textContent='حفظ السند';
+}
+
+async function loadVouchers(){
+  const params=new URLSearchParams();
+  const q=document.getElementById('fQ').value.trim();
+  const from=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  const min=document.getElementById('fMin').value;
+  const max=document.getElementById('fMax').value;
+  if(q)params.append('q',q);
+  if(from)params.append('date_from',from);
+  if(to)params.append('date_to',to);
+  if(min)params.append('amount_min',min);
+  if(max)params.append('amount_max',max);
+  const r=await fetch('/vouchers?'+params.toString(),{headers:H()});
+  const vs=(await r.json()).vouchers;
+  if(!vs.length){document.getElementById('vouchersBox').innerHTML='<div class="muted">لا توجد سندات مطابقة</div>';return;}
+  const canManage=USER.role==='admin';
+  const canApprove=USER.role!=='entry';
+  const statusAr={draft:'مسودة',approved:'معتمد',cancelled:'ملغي'};
+  document.getElementById('vouchersBox').innerHTML=`<table><thead><tr>
+    <th>#</th><th>رقم السند</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ</th><th>البيان</th>
+    <th>الحالة</th><th>المرفق</th><th>إجراءات</th></tr></thead>
+    <tbody>${vs.map(v=>`<tr>
+      <td>${v.id}</td><td>${v.voucher_no||'—'}</td><td>${v.voucher_date}</td><td>${v.beneficiary}</td>
+      <td>${fmt(v.amount)} ${v.currency}</td><td>${v.description||''}</td>
+      <td><span class="badge b-${v.status}">${statusAr[v.status]}</span></td>
+      <td>${v.file_path?`<button class="btn ghost sm" onclick="previewVoucher(${v.id})">معاينة</button>`:'—'}</td>
+      <td>
+        ${canApprove&&v.status==='draft'?`<button class="btn sm" onclick="setVoucherStatus(${v.id},'approved')">اعتماد</button>`:''}
+        ${canApprove&&v.status!=='cancelled'?`<button class="btn sm ghost" onclick="setVoucherStatus(${v.id},'cancelled')">إلغاء</button>`:''}
+        ${canManage?`<button class="btn sm danger" onclick="deleteVoucher(${v.id})">حذف</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+async function setVoucherStatus(id,status){
+  const r=await fetch('/vouchers/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({status})});
+  if(r.ok)loadVouchers();else alert((await r.json()).detail);
+}
+
+async function deleteVoucher(id){
+  if(!confirm('هل أنت متأكد من حذف هذا السند؟ هذا الإجراء لا يمكن التراجع عنه.'))return;
+  const r=await fetch('/vouchers/'+id,{method:'DELETE',headers:H()});
+  if(r.ok)loadVouchers();else alert((await r.json()).detail);
+}
+
+async function previewVoucher(id){
+  const r=await fetch('/vouchers/'+id+'/file',{headers:H()});
+  if(!r.ok){alert('تعذّرت معاينة الملف');return;}
+  const blob=await r.blob();const url=URL.createObjectURL(blob);
+  const isPdf=blob.type==='application/pdf';
+  document.getElementById('filePreview').className='modal-bg';
+  document.getElementById('filePreview').innerHTML=`<div class="modal">
+    ${isPdf?`<embed src="${url}" type="application/pdf" width="600" height="700">`:`<img src="${url}">`}
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <a class="btn sm" href="${url}" download>⬇ تحميل</a>
+      <button class="btn sm ghost" onclick="document.getElementById('filePreview').className='hidden'">إغلاق</button>
+    </div></div>`;
 }
 
 async function loadAudit(){

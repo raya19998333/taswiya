@@ -27,6 +27,7 @@ env.bak/
 venv.bak/
 *.db
 taswiya.db
+uploads/
 .DS_Store
 .vscode/
 .idea/
