@@ -869,6 +869,10 @@ const fmt=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:3});
 const H=()=>({'Authorization':'Bearer '+TOKEN});
 let voucherOcrText = '';
 let voucherOcrSource = '';
+async function safeErr(r, fb='خطأ في الخادم') {
+  try { const j = await r.json(); return j.detail || fb; }
+  catch { return r.statusText || fb; }
+}
 
 async function initApp(){
   if(!TOKEN){
@@ -933,7 +937,7 @@ async function run(){
   const fd=new FormData();fd.append('ledger',ledgerIn.files[0]);fd.append('bank',bankIn.files[0]);
   fd.append('ledger_sheet',document.getElementById('sheetSel').value);
   try{const r=await fetch('/reconcile',{method:'POST',headers:H(),body:fd});
-    if(!r.ok){const j=await r.json();throw new Error(j.detail||'خطأ');}
+    if(!r.ok){throw new Error(await safeErr(r));}
     result=await r.json();renderResult();
   }catch(e){showErr('err','تعذّرت المطابقة: '+e.message);}
   btn.disabled=false;btn.textContent='تشغيل المطابقة';
@@ -1075,7 +1079,7 @@ voucherFileIn.onchange=async()=>{
   fd.append('file',file);
   try{
     const r=await fetch('/vouchers/ocr',{method:'POST',headers:H(),body:fd});
-    const j=await r.json();
+    let j=null; try{j=await r.json();}catch{}
     if(r.status===503){
       hint.style.color='#B8860B';
       hint.textContent='ميزة المسح التلقائي غير مفعّلة على الخادم — يرجى إدخال بيانات السند يدوياً.';
@@ -1083,10 +1087,10 @@ voucherFileIn.onchange=async()=>{
     }
     if(r.status===422){
       hint.style.color='#c0392b';
-      hint.textContent=j.detail||'تعذّر قراءة المستند — يرجى رفع نسخة أوضح.';
+      hint.textContent=(j&&j.detail)||'تعذّر قراءة المستند — يرجى رفع نسخة أوضح.';
       return;
     }
-    if(!r.ok) throw new Error(j.detail||'تعذّر المسح');
+    if(!r.ok) throw new Error((j&&j.detail)||'تعذّر المسح');
     voucherOcrText = j.ocr_text || '';
     voucherOcrSource = j.ocr_source || '';
     if(j.voucher_no) document.getElementById('vNo').value = j.voucher_no;
@@ -1122,7 +1126,7 @@ async function addVoucher(){
   if(voucherFileIn.files[0])fd.append('file',voucherFileIn.files[0]);
   try{
     const r=await fetch('/vouchers',{method:'POST',headers:H(),body:fd});
-    if(!r.ok){const j=await r.json();throw new Error(j.detail||'خطأ');}
+    if(!r.ok){throw new Error(await safeErr(r));}
     document.getElementById('vNo').value='';document.getElementById('vDate').value='';
     document.getElementById('vAmount').value='';document.getElementById('vUnit').value='';document.getElementById('vBeneficiary').value='';
     document.getElementById('vDesc').value='';voucherFileIn.value='';
@@ -1244,7 +1248,7 @@ async function exportVoucherReport(format){
   if(status)params.append('status',status);
   params.append('format',format);
   const r=await fetch('/vouchers/report?'+params.toString(),{headers:H()});
-  if(!r.ok){alert((await r.json()).detail||'تعذّر إنشاء التقرير');return;}
+  if(!r.ok){alert(await safeErr(r,'تعذّر إنشاء التقرير'));return;}
   const blob=await r.blob();
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=format==='pdf'?'vouchers_report.pdf':'vouchers_report.xlsx';a.click();
 }
@@ -1421,14 +1425,14 @@ async function saveUser(){
     if(editingUserId){
       const payload={role,full_name:fullName};
       const r=await fetch('/users/'+editingUserId,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if(!r.ok){errEl.textContent=(await r.json()).detail||'خطأ';errEl.classList.remove('hidden');return;}
+      if(!r.ok){errEl.textContent=await safeErr(r,'خطأ');errEl.classList.remove('hidden');return;}
     }else{
       if(!fullName||!username||!password){errEl.textContent='الاسم واسم المستخدم وكلمة المرور مطلوبة';errEl.classList.remove('hidden');return;}
       const fd=new FormData();
       fd.append('full_name',fullName);fd.append('username',username);
       fd.append('role',role);fd.append('password',password);
       const r=await fetch('/users',{method:'POST',headers:H(),body:fd});
-      if(!r.ok){errEl.textContent=(await r.json()).detail||'خطأ';errEl.classList.remove('hidden');return;}
+      if(!r.ok){errEl.textContent=await safeErr(r,'خطأ');errEl.classList.remove('hidden');return;}
     }
     closeUserModal();loadUsers();
   }finally{btn.disabled=false;btn.textContent='حفظ';}
