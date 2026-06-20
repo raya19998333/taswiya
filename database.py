@@ -77,8 +77,11 @@ CREATE TABLE IF NOT EXISTS vouchers (
   voucher_date  TEXT NOT NULL,
   amount        REAL NOT NULL,
   currency      TEXT NOT NULL DEFAULT 'ر.ع',
+  source_unit   TEXT,
   beneficiary   TEXT NOT NULL,
   description   TEXT,
+  ocr_text      TEXT,
+  ocr_source    TEXT,
   file_path     TEXT,
   file_name     TEXT,
   status        TEXT NOT NULL DEFAULT 'draft'
@@ -96,6 +99,24 @@ def init_db(seed=True):
     conn = get_conn()
     conn.executescript(SCHEMA)
     conn.commit()
+
+    voucher_cols = {row[1] for row in conn.execute("PRAGMA table_info(vouchers)").fetchall()}
+    if "source_unit" not in voucher_cols:
+      conn.execute("ALTER TABLE vouchers ADD COLUMN source_unit TEXT")
+    if "ocr_text" not in voucher_cols:
+      conn.execute("ALTER TABLE vouchers ADD COLUMN ocr_text TEXT")
+    if "ocr_source" not in voucher_cols:
+      conn.execute("ALTER TABLE vouchers ADD COLUMN ocr_source TEXT")
+    conn.commit()
+
+    user_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+    if "password_changed_at" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN password_changed_at TEXT")
+        conn.execute("UPDATE users SET password_changed_at = created_at")
+    if "password_expires_days" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN password_expires_days INTEGER DEFAULT 0")
+    conn.commit()
+
     if seed:
         cur = conn.execute("SELECT COUNT(*) c FROM users")
         if cur.fetchone()["c"] == 0:

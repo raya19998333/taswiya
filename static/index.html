@@ -5,71 +5,531 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام التسوية البنكية الآلية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{--navy:#0f2c4d;--navy2:#1f4e78;--teal:#0e9b8e;--bg:#f4f7fb;
-    --green:#2e9e5b;--amber:#e08a1e;--yellow:#caa324;--blue:#2f74c0;--red:#d2415a;
-    --line:#e3e9f2;--ink:#1c2b3a;--mut:#6b7c93;}
+  :root{
+    --navy:#1e3a5f;
+    --navy2:#2d5a8e;
+    --teal:#2bb5ae;
+    --bg1:#f5f7fa;
+    --bg2:#eef1f6;
+    --bg3:#e5eaf2;
+    --green:#28c17b;
+    --amber:#f0a43a;
+    --yellow:#d8bf3c;
+    --blue:#46a0ff;
+    --red:#ff6b86;
+    --line:rgba(30,58,95,.08);
+    --ink:#1e2d3d;
+    --mut:#6b7d93;
+    --glass:rgba(255,255,255,.60);
+    --glass-strong:rgba(255,255,255,.80);
+    --panel:rgba(255,255,255,.76);
+    --panel-strong:rgba(255,255,255,.92);
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
-  .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
-  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:18px 0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Tajawal',sans-serif;
+    color:var(--ink);
+    line-height:1.6;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top right, rgba(72,215,208,.13), transparent 32%),
+      radial-gradient(circle at left center, rgba(70,160,255,.09), transparent 32%),
+      linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 44%,var(--bg3) 100%);
+    overflow-x:hidden;
+  }
+  body::before,
+  body::after{
+    content:'';
+    position:fixed;
+    inset:auto;
+    width:560px;
+    height:560px;
+    border-radius:50%;
+    pointer-events:none;
+    filter:blur(28px);
+    opacity:.45;
+    z-index:0;
+  }
+  body::before{top:-180px;inset-inline-end:-160px;background:radial-gradient(circle, rgba(72,215,208,.28) 0%, rgba(72,215,208,.06) 50%, transparent 72%)}
+  body::after{bottom:-220px;inset-inline-start:-140px;background:radial-gradient(circle, rgba(70,160,255,.22) 0%, rgba(70,160,255,.05) 52%, transparent 74%)}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  header,nav,.card,.login-box,.modal,.side-preview,.tab,.btn,input,select,textarea,.drop{backdrop-filter:blur(22px) saturate(180%)}
+  header{
+    background:rgba(255,255,255,.82);
+    color:var(--ink);
+    padding:16px 0;
+    border-bottom:1px solid rgba(255,255,255,.96);
+    box-shadow:0 4px 24px rgba(100,140,180,.10), 0 1px 0 rgba(30,58,95,.05)
+  }
   header .wrap{display:flex;align-items:center;gap:16px}
-  .logo{width:44px;height:44px;border-radius:12px;background:var(--teal);display:grid;place-items:center;font-weight:800;font-size:20px}
-  header h1{font-size:20px;font-weight:800}
-  header p{font-size:12.5px;opacity:.8}
-  .userchip{margin-inline-start:auto;display:flex;align-items:center;gap:10px;font-size:13px}
-  .userchip .role{background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px;font-size:12px}
-  .lnk{background:none;border:0;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;opacity:.85}
-  .lnk:hover{opacity:1;text-decoration:underline}
-  nav{background:#fff;border-bottom:1px solid var(--line)}
-  nav .wrap{display:flex;gap:4px}
-  .navbtn{padding:14px 18px;border:0;background:none;font-family:inherit;font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent}
-  .navbtn.active{color:var(--navy);border-bottom-color:var(--teal)}
-  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:22px;box-shadow:0 1px 3px rgba(15,44,77,.04)}
-  .card h2{font-size:16px;margin-bottom:16px;color:var(--navy)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  label{font-size:13px;font-weight:500;color:var(--mut);display:block;margin-bottom:6px}
-  input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff}
-  .drop{border:1.5px dashed #c4d2e6;border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:.2s;background:#fafcff;font-size:13px;color:var(--mut)}
-  .drop:hover{border-color:var(--teal);background:#f0fbfa}
-  .drop.set{border-color:var(--teal);color:var(--navy);background:#eefcfa;font-weight:500}
-  .btn{margin-top:18px;width:100%;padding:14px;border:0;border-radius:12px;background:var(--teal);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
-  .btn:hover{background:#0c8579}.btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy2)}
-  .btn.ghost:hover{background:#f0f5fb}
-  .btn.sm{width:auto;margin:0;padding:8px 16px;font-size:13px}
-  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-  .stat{border-radius:14px;padding:16px;color:#fff}.stat .n{font-size:30px;font-weight:800;line-height:1}
-  .stat .t{font-size:12.5px;font-weight:500;margin-top:6px;opacity:.95}.stat .s{font-size:11px;opacity:.85;margin-top:3px}
-  .s-green{background:var(--green)}.s-amber{background:var(--amber)}.s-yellow{background:var(--yellow)}.s-blue{background:var(--blue)}.s-red{background:var(--red)}
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-  .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:13px;cursor:pointer;color:var(--mut)}
-  .tab.active{background:var(--navy2);color:#fff;border-color:var(--navy2)}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{background:#f5f8fc;color:var(--navy);padding:10px;text-align:right;font-weight:700;border-bottom:2px solid var(--line)}
-  td{padding:9px 10px;border-bottom:1px solid #eef2f7}tr:hover td{background:#fafcff}
-  .hidden{display:none}.muted{color:var(--mut);font-size:13px;text-align:center;padding:24px}
+  .logo{
+    width:46px;height:46px;border-radius:14px;
+    background:linear-gradient(135deg, #2bb5ae, #46a0ff);
+    display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;
+    box-shadow:0 8px 22px rgba(43,181,174,.28), inset 0 1px 0 rgba(255,255,255,.35)
+  }
+  header h1{font-size:19px;font-weight:800;letter-spacing:.1px;color:var(--navy)}
+  header p{font-size:12px;color:var(--mut);margin-top:1px}
+  .userchip{margin-inline-start:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink)}
+  .userchip .role{
+    background:rgba(30,58,95,.07);
+    padding:5px 13px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    border:1px solid rgba(30,58,95,.11);
+    color:var(--navy)
+  }
+  .lnk{background:none;border:0;color:var(--mut);cursor:pointer;font-family:inherit;font-size:13px;transition:color .18s}
+  .lnk:hover{color:var(--navy);text-decoration:underline}
+  nav{
+    position:sticky;
+    top:0;
+    z-index:40;
+    background:rgba(255,255,255,.78);
+    border-bottom:1px solid rgba(30,58,95,.07);
+    box-shadow:0 2px 16px rgba(100,140,180,.08)
+  }
+  nav .wrap{display:flex;gap:8px;overflow:auto;padding-top:10px;padding-bottom:10px}
+  nav .wrap::-webkit-scrollbar{height:5px}
+  nav .wrap::-webkit-scrollbar-thumb{background:rgba(30,58,95,.14);border-radius:999px}
+  .navbtn{
+    padding:10px 20px;
+    border:1.5px solid transparent;
+    background:rgba(30,58,95,.04);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    color:var(--mut);
+    cursor:pointer;
+    border-radius:999px;
+    transition:transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease, border-color .18s ease
+  }
+  .navbtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.85);color:var(--navy);box-shadow:0 4px 16px rgba(100,140,180,.13)}
+  .navbtn.active{
+    background:rgba(255,255,255,.96);
+    color:var(--navy);
+    border-color:rgba(30,58,95,.09);
+    box-shadow:0 6px 22px rgba(100,140,180,.16);
+    font-weight:800
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.94);
+    border-radius:24px;
+    padding:28px;
+    margin-top:22px;
+    box-shadow:0 6px 28px rgba(100,140,180,.10), 0 1px 4px rgba(100,140,180,.07);
+    position:relative;
+    overflow:hidden;
+    animation:rise .42s ease both
+  }
+  .card::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(145deg, rgba(255,255,255,.55) 0%, transparent 50%);
+    pointer-events:none
+  }
+  .card h2{position:relative;font-size:16px;margin-bottom:18px;color:var(--navy);letter-spacing:.1px;font-weight:800}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+  label{font-size:13px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px}
+  input,select,textarea{
+    width:100%;
+    padding:12px 15px;
+    border:1.5px solid rgba(30,58,95,.10);
+    border-radius:13px;
+    font-family:inherit;
+    font-size:14px;
+    background:rgba(255,255,255,.84);
+    color:var(--ink);
+    box-shadow:inset 0 1px 3px rgba(100,140,180,.06), 0 1px 0 rgba(255,255,255,.98);
+    transition:border-color .18s, box-shadow .18s
+  }
+  input::placeholder,textarea::placeholder{color:#9aaab8}
+  input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:rgba(43,181,174,.60);
+    box-shadow:0 0 0 4px rgba(43,181,174,.11), inset 0 1px 3px rgba(100,140,180,.05)
+  }
+  .drop{
+    border:1.5px dashed rgba(43,181,174,.40);
+    border-radius:18px;
+    padding:22px;
+    min-height:94px;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    background:rgba(255,255,255,.60);
+    font-size:13px;
+    color:var(--mut)
+  }
+  .drop:hover{transform:translateY(-1px);border-color:rgba(43,181,174,.70);background:rgba(255,255,255,.82);box-shadow:0 6px 22px rgba(100,140,180,.10)}
+  .drop.set{
+    border-color:rgba(43,181,174,.80);
+    color:var(--navy);
+    background:linear-gradient(135deg, rgba(72,215,208,.10), rgba(70,160,255,.07));
+    font-weight:700
+  }
+  .btn{
+    margin-top:18px;
+    width:100%;
+    padding:14px 18px;
+    border:0;
+    border-radius:13px;
+    background:linear-gradient(135deg, #2bb5ae, #3d8fe0);
+    color:#fff;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    box-shadow:0 6px 22px rgba(43,181,174,.22)
+  }
+  .btn:hover{transform:translateY(-2px);filter:saturate(1.08) brightness(1.04);box-shadow:0 12px 30px rgba(43,181,174,.30)}
+  .btn:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn.ghost{background:rgba(255,255,255,.82);color:var(--navy);border:1.5px solid rgba(30,58,95,.11);box-shadow:0 2px 8px rgba(100,140,180,.09)}
+  .btn.ghost:hover{background:rgba(255,255,255,.97);box-shadow:0 6px 18px rgba(100,140,180,.14)}
+  .btn.danger{background:linear-gradient(135deg, #ff6987, #ff4a66);box-shadow:0 6px 22px rgba(255,105,135,.20)}
+  .btn.sm{width:auto;margin:0;padding:9px 16px;font-size:13px;border-radius:11px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+  .stat{
+    border-radius:20px;
+    padding:18px;
+    color:#fff;
+    box-shadow:0 6px 22px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.22)
+  }
+  .stat .n{font-size:30px;font-weight:800;line-height:1}
+  .stat .t{font-size:12.5px;font-weight:700;margin-top:6px;opacity:.95}
+  .stat .s{font-size:11px;opacity:.82;margin-top:3px}
+  .s-green{background:linear-gradient(135deg, rgba(40,193,123,.95), rgba(26,148,94,.92))}
+  .s-amber{background:linear-gradient(135deg, rgba(240,164,58,.95), rgba(207,124,25,.92))}
+  .s-yellow{background:linear-gradient(135deg, rgba(216,191,60,.95), rgba(176,150,23,.92))}
+  .s-blue{background:linear-gradient(135deg, rgba(70,160,255,.95), rgba(43,104,214,.92))}
+  .s-red{background:linear-gradient(135deg, rgba(255,107,134,.95), rgba(205,66,94,.92))}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tab{
+    padding:9px 16px;
+    border-radius:999px;
+    border:1.5px solid rgba(30,58,95,.10);
+    background:rgba(255,255,255,.68);
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--mut);
+    transition:transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease
+  }
+  .tab:hover{transform:translateY(-1px);background:rgba(255,255,255,.90);color:var(--navy)}
+  .tab.active{background:rgba(30,58,95,.90);color:#fff;border-color:transparent;box-shadow:0 6px 20px rgba(30,58,95,.18)}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border-radius:16px;background:rgba(255,255,255,.55);border:1px solid rgba(30,58,95,.08)}
+  th{background:rgba(30,58,95,.88);color:#fff;padding:12px 12px;text-align:right;font-weight:800;border-bottom:1px solid rgba(255,255,255,.10)}
+  td{padding:11px 12px;border-bottom:1px solid rgba(30,58,95,.05);background:rgba(255,255,255,.24)}
+  tr:hover td{background:rgba(255,255,255,.58)}
+  .hidden{display:none!important}
+  .muted{color:var(--mut);font-size:13px;text-align:center;padding:26px}
   .spin{display:inline-block;width:16px;height:16px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:r .7s linear infinite;vertical-align:-3px;margin-inline-start:8px}
   @keyframes r{to{transform:rotate(360deg)}}
-  .err{background:#fdecef;color:var(--red);padding:12px;border-radius:10px;font-size:13px;margin-top:14px}
+  @keyframes rise{from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .err{background:rgba(255,107,134,.09);color:#c42040;padding:12px 15px;border-radius:13px;font-size:13px;margin-top:14px;border:1px solid rgba(255,107,134,.16)}
   .chartbox{height:240px}
-  .badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
-  .b-draft{background:#fff3d6;color:#9a6b00}.b-approved{background:#dcf5e6;color:#1d7a43}.b-cancelled{background:#fdecef;color:var(--red)}
-  textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;resize:vertical}
-  .filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;display:inline-block}
+  .b-draft{background:rgba(255,243,214,.95);color:#8e5d00}
+  .b-approved{background:rgba(220,245,230,.95);color:#176e3b}
+  .b-cancelled{background:rgba(255,230,236,.95);color:#b52d49}
+  textarea{min-height:110px;resize:vertical}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
   .filters .full{grid-column:1/-1}
-  .modal-bg{position:fixed;inset:0;background:rgba(15,44,77,.55);display:grid;place-items:center;z-index:50}
-  .modal{background:#fff;border-radius:14px;padding:18px;max-width:90vw;max-height:90vh;overflow:auto}
+  .modal-bg{position:fixed;inset:0;background:rgba(80,110,150,.28);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:50}
+  .modal{
+    background:rgba(255,255,255,.92);
+    border-radius:22px;
+    padding:22px;
+    max-width:90vw;
+    max-height:90vh;
+    overflow:auto;
+    border:1px solid rgba(255,255,255,.98);
+    box-shadow:0 24px 60px rgba(60,100,160,.16)
+  }
   .modal img,.modal embed{max-width:80vw;max-height:80vh}
-  @media(max-width:760px){.filters{grid-template-columns:1fr 1fr}}
-  .login-wrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,var(--navy),var(--navy2))}
-  .login-box{background:#fff;border-radius:18px;padding:34px;width:360px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
-  .login-box .logo{margin:0 auto 14px}.login-box h2{text-align:center;color:var(--navy);margin-bottom:4px}
+  .side-preview{
+    position:fixed;
+    top:0;
+    inset-inline-end:0;
+    width:min(460px,92vw);
+    height:100vh;
+    background:rgba(255,255,255,.90);
+    box-shadow:-12px 0 40px rgba(60,100,160,.12);
+    z-index:60;
+    overflow:auto;
+    padding:22px;
+    transform:translateX(0);
+    transition:.2s;
+    border-inline-start:1px solid rgba(255,255,255,.98)
+  }
+  .side-preview.hidden{display:none}
+  .side-preview h3{color:var(--navy);font-size:16px;margin-bottom:10px;font-weight:800}
+  .side-preview .meta{font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.8}
+  .side-preview img,.side-preview embed{width:100%;border-radius:16px;border:1px solid rgba(30,58,95,.09);min-height:70vh;background:rgba(255,255,255,.60)}
+  .login-wrap{min-height:100vh;display:grid;place-items:center;
+    background:radial-gradient(circle at top right, rgba(72,215,208,.13), transparent 32%),
+    radial-gradient(circle at left center, rgba(70,160,255,.09), transparent 32%),
+    linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 44%,var(--bg3) 100%);
+    position:relative;overflow:hidden}
+  .login-wrap::before,.login-wrap::after{content:'';position:absolute;border-radius:50%;filter:blur(24px);pointer-events:none;opacity:.5}
+  .login-wrap::before{width:420px;height:420px;top:-120px;left:-100px;background:radial-gradient(circle, rgba(72,215,208,.24) 0%, transparent 70%)}
+  .login-wrap::after{width:360px;height:360px;right:-120px;bottom:-100px;background:radial-gradient(circle, rgba(70,160,255,.18) 0%, transparent 70%)}
+  .login-box{background:rgba(255,255,255,.84);border-radius:26px;padding:36px;width:min(420px,92vw);box-shadow:0 16px 50px rgba(60,100,160,.12);border:1px solid rgba(255,255,255,.96);position:relative;z-index:1}
+  .login-box .logo{margin:0 auto 14px}
+  .login-box h2{text-align:center;color:var(--navy);margin-bottom:4px}
   .login-box .sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:22px}
   .hint{margin-top:16px;font-size:11.5px;color:var(--mut);text-align:center;line-height:1.8}
   .clickrow{cursor:pointer}
-  @media(max-width:760px){.grid2,.cards{grid-template-columns:1fr 1fr}.stat .n{font-size:24px}}
+  .chartbox canvas{border-radius:16px}
+  @media(max-width:760px){
+    .wrap{padding:0 14px}
+    header .wrap{flex-wrap:wrap}
+    .userchip{margin-inline-start:0;width:100%;justify-content:space-between}
+    .grid2,.cards,.filters{grid-template-columns:1fr}
+    .card{padding:18px;border-radius:20px}
+    .stat .n{font-size:24px}
+    .side-preview{width:100vw}
+    .modal img,.modal embed{max-width:88vw;max-height:72vh}
+    .page-intro h3{font-size:16px}
+    .footer-inner{justify-content:center;text-align:center}
+    .dash-grid{grid-template-columns:1fr}
+  }
+
+  /* ── page layout ── */
+  .page-content{padding-top:32px;padding-bottom:88px}
+
+  /* ── page intro ── */
+  .page-intro{
+    display:flex;align-items:center;gap:16px;
+    padding-bottom:22px;
+    border-bottom:1.5px solid rgba(30,58,95,.07);
+    margin-bottom:4px
+  }
+  .page-intro-icon{
+    width:46px;height:46px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,rgba(43,181,174,.14),rgba(61,143,224,.11));
+    border:1px solid rgba(43,181,174,.18);
+    display:grid;place-items:center;font-size:22px;color:var(--teal)
+  }
+  .btn i,.navbtn i{vertical-align:-0.1em;font-size:1em}
+  .page-intro h3{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:3px}
+  .page-intro p{font-size:13px;color:var(--mut);line-height:1.5}
+
+  /* ── step tag ── */
+  .step-tag{
+    display:inline-block;font-size:10.5px;font-weight:800;
+    color:var(--teal);background:rgba(43,181,174,.10);
+    border:1px solid rgba(43,181,174,.22);border-radius:999px;
+    padding:2px 10px;margin-bottom:8px;letter-spacing:.4px
+  }
+
+  /* ── card actions row ── */
+  .card-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+
+  /* ── table scroll wrapper ── */
+  .tbl-wrap{overflow-x:auto;border-radius:16px;margin-top:4px}
+
+  /* ── voucher dashboard grid ── */
+  .dash-grid{display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start}
+
+  /* ── footer ── */
+  .app-footer{
+    border-top:1px solid rgba(30,58,95,.07);
+    background:rgba(255,255,255,.68);
+    backdrop-filter:blur(18px) saturate(160%);
+    padding:20px 0;margin-top:0
+  }
+  .footer-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;font-size:12px;color:var(--mut)
+  }
+  .footer-brand{
+    display:flex;align-items:center;gap:8px;
+    font-weight:700;color:var(--navy);font-size:13px
+  }
+  .footer-logo{
+    width:26px;height:26px;border-radius:8px;
+    background:linear-gradient(135deg,#2bb5ae,#3d8fe0);
+    display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff
+  }
+
+  /* ══ Dashboard ══ */
+  .dash-welcome{
+    background:linear-gradient(135deg,#1e3a5f 0%,#1a5f7a 50%,#2d5a8e 100%);
+    border-radius:24px;padding:28px 32px;margin-top:22px;color:#fff;
+    position:relative;overflow:hidden;
+    box-shadow:0 12px 40px rgba(30,58,95,.25)
+  }
+  .dash-welcome::before{content:'';position:absolute;top:-60px;inset-inline-end:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+  .dash-welcome::after{content:'';position:absolute;bottom:-40px;inset-inline-start:80px;width:140px;height:140px;border-radius:50%;background:rgba(43,181,174,.13);pointer-events:none}
+  .dash-welcome-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .dash-welcome-text h2{font-size:22px;font-weight:800;margin-bottom:4px}
+  .dash-welcome-text p{font-size:13.5px;opacity:.80}
+  .dash-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:999px;padding:8px 18px;font-size:13px;font-weight:700}
+  .dash-badge i{font-size:15px;opacity:.88}
+  .dash-badge .dot{width:8px;height:8px;border-radius:50%;background:#2bda87;box-shadow:0 0 7px rgba(43,218,135,.6);flex-shrink:0}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:22px}
+  .kpi-card{
+    border-radius:22px;padding:22px 20px;color:#fff;
+    position:relative;overflow:hidden;
+    box-shadow:0 8px 28px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.18);
+    animation:rise .45s ease both;transition:transform .2s,box-shadow .2s
+  }
+  .kpi-card:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.18)}
+  .kpi-card::after{content:'';position:absolute;top:-18px;inset-inline-end:-18px;width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none}
+  .kpi-icon{width:40px;height:40px;border-radius:12px;margin-bottom:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:19px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+  .kpi-num{font-size:34px;font-weight:800;line-height:1;margin-bottom:5px}
+  .kpi-lbl{font-size:13px;font-weight:700;opacity:.96}
+  .kpi-sub{font-size:11px;opacity:.72;margin-top:4px}
+  .kpi-navy{background:linear-gradient(135deg,#1c5b96,#1e3a6f)}
+  .kpi-green{background:linear-gradient(135deg,#1da65d,#0f7d44)}
+  .kpi-amber{background:linear-gradient(135deg,#e89a18,#c87510)}
+  .kpi-teal{background:linear-gradient(135deg,#1aa8a2,#0d8a84)}
+  .kpi-red{background:linear-gradient(135deg,#e84f6e,#c73050)}
+
+  .charts-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-top:20px}
+  .chart-card{background:var(--panel);border:1px solid rgba(255,255,255,.94);border-radius:24px;padding:24px;box-shadow:0 6px 28px rgba(100,140,180,.10);animation:rise .5s ease both}
+  .chart-card h3{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .chart-card h3 i{font-size:16px;color:var(--teal)}
+
+  .recent-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  .recent-card{background:var(--panel);border:1px solid rgba(255,255,255,.94);border-radius:24px;padding:24px;box-shadow:0 6px 28px rgba(100,140,180,.10);animation:rise .55s ease both}
+  .recent-card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .recent-card-hd h3{font-size:15px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;margin:0}
+  .recent-card-hd h3 i{color:var(--teal)}
+  .view-all-btn{font-size:12px;font-weight:700;color:var(--teal);cursor:pointer;background:none;border:0;font-family:inherit;padding:0;display:flex;align-items:center;gap:3px}
+  .view-all-btn:hover{text-decoration:underline}
+
+  .act-item{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid rgba(30,58,95,.06)}
+  .act-item:last-child{border-bottom:0;padding-bottom:0}
+  .act-dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+  .act-dot.green{background:rgba(40,193,123,.12);color:#1a9461}
+  .act-dot.amber{background:rgba(240,164,58,.13);color:#b97312}
+  .act-dot.blue{background:rgba(70,160,255,.12);color:#1a60c9}
+  .act-dot.red{background:rgba(255,107,134,.12);color:#c42044}
+  .act-title{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .act-meta{font-size:11px;color:var(--mut);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+  .dash-quick{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap}
+  .qbtn{display:flex;align-items:center;gap:9px;padding:12px 20px;border-radius:14px;background:var(--panel);border:1px solid rgba(255,255,255,.94);font-family:inherit;font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;box-shadow:0 4px 16px rgba(100,140,180,.09);transition:transform .18s,box-shadow .18s,background .18s}
+  .qbtn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(100,140,180,.14);background:rgba(255,255,255,.97)}
+  .qbtn i{font-size:17px;color:var(--teal)}
+
+  @media(max-width:900px){
+    .kpi-grid{grid-template-columns:1fr 1fr}
+    .charts-grid,.recent-grid{grid-template-columns:1fr}
+  }
+
+  /* ══ User Management ══ */
+  .users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:4px}
+  .user-card{
+    background:var(--panel);border:1px solid rgba(255,255,255,.94);
+    border-radius:20px;padding:20px;
+    display:flex;align-items:flex-start;gap:14px;
+    box-shadow:0 4px 18px rgba(100,140,180,.10);
+    transition:transform .18s,box-shadow .18s;animation:rise .4s ease both
+  }
+  .user-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(100,140,180,.14)}
+  .user-avatar{
+    width:50px;height:50px;border-radius:14px;
+    display:grid;place-items:center;
+    font-size:22px;font-weight:800;color:#fff;flex-shrink:0
+  }
+  .ua-admin     {background:linear-gradient(135deg,#1c5b96,#1e3a6f)}
+  .ua-supervisor{background:linear-gradient(135deg,#1da65d,#0f7d44)}
+  .ua-entry     {background:linear-gradient(135deg,#e89a18,#c87510)}
+  .user-body{flex:1;min-width:0}
+  .user-fullname{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-uname{font-size:12px;color:var(--mut);margin-bottom:8px}
+  .user-role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:800}
+  .urb-admin     {background:rgba(28,91,150,.10);color:#1c5b96;border:1px solid rgba(28,91,150,.18)}
+  .urb-supervisor{background:rgba(29,166,93,.10); color:#0f7d44;border:1px solid rgba(29,166,93,.18)}
+  .urb-entry     {background:rgba(232,154,24,.10);color:#c87510;border:1px solid rgba(232,154,24,.18)}
+  .user-card-actions{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+  .uca-btn{
+    width:32px;height:32px;border-radius:9px;
+    border:1.5px solid rgba(30,58,95,.11);background:rgba(255,255,255,.80);
+    display:grid;place-items:center;font-size:13px;cursor:pointer;color:var(--mut);
+    transition:all .16s
+  }
+  .uca-btn:hover{background:rgba(255,255,255,.97);color:var(--navy);border-color:rgba(30,58,95,.22);transform:scale(1.08)}
+  .uca-btn.danger:hover{background:rgba(255,107,134,.10);color:#c42044;border-color:rgba(255,107,134,.30)}
+
+  /* ══ Audit Log ══ */
+  .audit-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .audit-filters{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+  .audit-filters input,.audit-filters select{width:auto;flex:1;min-width:160px;margin:0;padding:9px 13px;font-size:13px;border-radius:11px}
+
+  .audit-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .audit-stat-chip{
+    display:flex;align-items:center;gap:7px;
+    padding:7px 14px;border-radius:999px;
+    font-size:12px;font-weight:700;
+    border:1.5px solid transparent
+  }
+  .asc-blue  {background:rgba(70,160,255,.10);color:#1a60c9;border-color:rgba(70,160,255,.20)}
+  .asc-navy  {background:rgba(30,58,95,.08); color:var(--navy);border-color:rgba(30,58,95,.14)}
+  .asc-green {background:rgba(40,193,123,.10);color:#1a9461;border-color:rgba(40,193,123,.22)}
+  .asc-amber {background:rgba(240,164,58,.10);color:#b97312;border-color:rgba(240,164,58,.22)}
+  .asc-red   {background:rgba(255,107,134,.10);color:#c42044;border-color:rgba(255,107,134,.22)}
+  .asc-gray  {background:rgba(107,125,147,.08);color:var(--mut);border-color:rgba(107,125,147,.16)}
+
+  .audit-feed{display:flex;flex-direction:column;gap:0}
+  .audit-item{
+    display:flex;align-items:flex-start;gap:14px;
+    padding:14px 4px;
+    border-bottom:1px solid rgba(30,58,95,.06);
+    transition:background .15s;border-radius:12px;margin:0 -4px
+  }
+  .audit-item:last-child{border-bottom:0}
+  .audit-item:hover{background:rgba(255,255,255,.70)}
+  .audit-icon{
+    width:38px;height:38px;border-radius:11px;
+    display:grid;place-items:center;font-size:16px;flex-shrink:0;
+    margin-top:1px
+  }
+  .ai-login   {background:rgba(70,160,255,.12);  color:#1a60c9}
+  .ai-reconcile{background:rgba(30,58,95,.09);   color:var(--navy)}
+  .ai-approve {background:rgba(40,193,123,.12);  color:#1a9461}
+  .ai-export  {background:rgba(240,164,58,.12);  color:#b97312}
+  .ai-delete  {background:rgba(255,107,134,.12); color:#c42044}
+  .ai-voucher {background:rgba(43,181,174,.12);  color:var(--teal)}
+  .ai-default {background:rgba(107,125,147,.10); color:var(--mut)}
+
+  .audit-body{flex:1;min-width:0}
+  .audit-row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+  .audit-action-lbl{font-size:14px;font-weight:800;color:var(--ink)}
+  .audit-tag{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800}
+  .at-login    {background:rgba(70,160,255,.12);  color:#1a60c9}
+  .at-reconcile{background:rgba(30,58,95,.09);   color:var(--navy)}
+  .at-approve  {background:rgba(40,193,123,.12);  color:#1a9461}
+  .at-export   {background:rgba(240,164,58,.12);  color:#b97312}
+  .at-delete   {background:rgba(255,107,134,.12); color:#c42044}
+  .at-default  {background:rgba(107,125,147,.10); color:var(--mut)}
+
+  .audit-meta{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .audit-meta i{font-size:11px}
+  .audit-detail{font-size:12px;color:var(--mut);margin-top:4px;background:rgba(30,58,95,.04);padding:5px 10px;border-radius:8px;word-break:break-all}
+  .audit-del-btn{
+    width:32px;height:32px;border-radius:9px;border:1.5px solid rgba(255,107,134,.25);
+    background:rgba(255,107,134,.06);color:#c42044;
+    display:grid;place-items:center;font-size:14px;
+    cursor:pointer;transition:background .16s,border-color .16s,transform .16s;flex-shrink:0;margin-top:2px
+  }
+  .audit-del-btn:hover{background:rgba(255,107,134,.14);border-color:rgba(255,107,134,.50);transform:scale(1.08)}
+  .audit-empty{text-align:center;padding:48px 24px;color:var(--mut)}
+  .audit-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.4}
 </style>
 </head>
 <body>
@@ -86,16 +546,95 @@
     </div>
   </div></header>
   <nav><div class="wrap">
-    <button class="navbtn active" id="nav-new" onclick="go('new')">تسوية جديدة</button>
-    <button class="navbtn" id="nav-hist" onclick="go('hist')">السجل</button>
-    <button class="navbtn" id="nav-vouchers" onclick="go('vouchers')">سندات الصرف</button>
-    <button class="navbtn hidden" id="nav-audit" onclick="go('audit')">سجل التدقيق</button>
+    <button class="navbtn active" id="nav-dash"     onclick="go('dash')"><i class="bi bi-grid-fill"></i> لوحة التحكم</button>
+    <button class="navbtn"        id="nav-new"      onclick="go('new')"><i class="bi bi-arrow-repeat"></i> تسوية جديدة</button>
+    <button class="navbtn"        id="nav-hist"     onclick="go('hist')"><i class="bi bi-journal-text"></i> السجل</button>
+    <button class="navbtn"        id="nav-vouchers" onclick="go('vouchers')"><i class="bi bi-receipt-cutoff"></i> سندات الصرف</button>
+    <button class="navbtn hidden" id="nav-audit"    onclick="go('audit')"><i class="bi bi-shield-check"></i> سجل التدقيق</button>
+    <button class="navbtn hidden" id="nav-users"    onclick="go('users')"><i class="bi bi-people-fill"></i> المستخدمون</button>
   </div></nav>
 
+  <div class="page-content">
   <div class="wrap">
-    <div id="page-new">
+
+    <!-- ══ لوحة التحكم الرئيسية ══ -->
+    <div id="page-dash">
+
+      <!-- بانر الترحيب -->
+      <div class="dash-welcome">
+        <div class="dash-welcome-inner">
+          <div class="dash-welcome-text">
+            <h2 id="dashGreet">مرحباً</h2>
+            <p>لوحة التحكم الرئيسية — نظرة شاملة على نشاط النظام</p>
+          </div>
+          <div class="dash-badge">
+            <span class="dot"></span>
+            <i class="bi bi-calendar3"></i>
+            <span id="dashDate">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقات KPI -->
+      <div class="kpi-grid" id="dashKpis">
+        <div class="kpi-card kpi-navy"><div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div><div class="kpi-num">—</div><div class="kpi-lbl">إجمالي التسويات</div><div class="kpi-sub">كل التسويات البنكية</div></div>
+        <div class="kpi-card kpi-green"><div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div><div class="kpi-num">—</div><div class="kpi-lbl">تسويات معتمدة</div><div class="kpi-sub">مؤكدة ومكتملة</div></div>
+        <div class="kpi-card kpi-amber"><div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div><div class="kpi-num">—</div><div class="kpi-lbl">تسويات مسودة</div><div class="kpi-sub">بانتظار الاعتماد</div></div>
+        <div class="kpi-card kpi-teal"><div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div><div class="kpi-num">—</div><div class="kpi-lbl">سندات معتمدة</div><div class="kpi-sub">جارٍ التحميل…</div></div>
+      </div>
+
+      <!-- الرسوم البيانية -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i class="bi bi-bar-chart-line-fill"></i> نشاط التسويات الشهرية</h3>
+          <div style="height:220px"><canvas id="dashRunChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3><i class="bi bi-pie-chart-fill"></i> توزيع حالات السندات</h3>
+          <div style="height:220px"><canvas id="dashVoucherChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- آخر النشاطات -->
+      <div class="recent-grid">
+        <div class="recent-card">
+          <div class="recent-card-hd">
+            <h3><i class="bi bi-clock-history"></i> آخر التسويات</h3>
+            <button class="view-all-btn" onclick="go('hist')">عرض الكل <i class="bi bi-arrow-left-short"></i></button>
+          </div>
+          <div id="dashRecentRuns"><div class="muted">جارٍ التحميل…</div></div>
+        </div>
+        <div class="recent-card">
+          <div class="recent-card-hd">
+            <h3><i class="bi bi-receipt"></i> آخر السندات</h3>
+            <button class="view-all-btn" onclick="go('vouchers')">عرض الكل <i class="bi bi-arrow-left-short"></i></button>
+          </div>
+          <div id="dashRecentVouchers"><div class="muted">جارٍ التحميل…</div></div>
+        </div>
+      </div>
+
+      <!-- إجراءات سريعة -->
+      <div class="dash-quick">
+        <button class="qbtn" onclick="go('new')"><i class="bi bi-plus-circle-fill"></i> تسوية بنكية جديدة</button>
+        <button class="qbtn" onclick="go('vouchers')"><i class="bi bi-receipt-cutoff"></i> إضافة سند صرف</button>
+        <button class="qbtn" onclick="go('hist')"><i class="bi bi-journal-text"></i> سجل التسويات</button>
+        <button class="qbtn hidden" id="dashAuditBtn" onclick="go('audit')"><i class="bi bi-shield-check"></i> سجل التدقيق</button>
+      </div>
+    </div>
+
+    <!-- ══ صفحة التسوية الجديدة ══ -->
+    <div id="page-new" class="hidden">
+      <div class="page-intro">
+        <div class="page-intro-icon"><i class="bi bi-arrow-repeat"></i></div>
+        <div>
+          <h3>تسوية بنكية جديدة</h3>
+          <p>ارفع ملفي الخزينة والبنك وشغّل المطابقة التلقائية في ثلاث خطوات بسيطة</p>
+        </div>
+      </div>
+
       <div class="card">
-        <h2>① رفع الملفات</h2>
+        <div class="step-tag">الخطوة ١ — رفع الملفات</div>
+        <h2>ملف الخزينة وكشف البنك</h2>
         <div class="grid2">
           <div>
             <label>دفتر الخزينة (Excel)</label>
@@ -114,17 +653,50 @@
         <button class="btn" id="runBtn" disabled onclick="run()">تشغيل المطابقة</button>
         <div id="err" class="err hidden"></div>
       </div>
+
       <div id="results" class="hidden"></div>
     </div>
 
+    <!-- ══ صفحة السجل ══ -->
     <div id="page-hist" class="hidden">
-      <div class="card"><h2>سجل التسويات</h2><div id="histBox"></div></div>
+      <div class="page-intro">
+        <div class="page-intro-icon"><i class="bi bi-journal-text"></i></div>
+        <div>
+          <h3>سجل التسويات</h3>
+          <p>استعراض جميع التسويات البنكية السابقة واعتمادها أو إدارتها</p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>التسويات البنكية</h2>
+        <div class="tbl-wrap" id="histBox"></div>
+      </div>
       <div id="runDetail"></div>
     </div>
 
+    <!-- ══ صفحة سندات الصرف ══ -->
     <div id="page-vouchers" class="hidden">
+      <div class="page-intro">
+        <div class="page-intro-icon"><i class="bi bi-receipt-cutoff"></i></div>
+        <div>
+          <h3>سندات الصرف</h3>
+          <p>إضافة ومتابعة سندات الصرف مع دعم المسح الضوئي التلقائي للمرفقات</p>
+        </div>
+      </div>
+
+      <!-- لوحة الإحصاء -->
       <div class="card">
-        <h2>إضافة سند صرف جديد</h2>
+        <div class="step-tag">لوحة الإحصاء</div>
+        <h2>ملخص السندات</h2>
+        <div class="dash-grid">
+          <div class="cards" id="voucherStats"></div>
+          <div class="chartbox"><canvas id="voucherChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- إضافة سند -->
+      <div class="card">
+        <div class="step-tag">إضافة سند</div>
+        <h2>سند صرف جديد</h2>
         <div class="grid2">
           <div>
             <label>رقم السند (اختياري)</label>
@@ -133,6 +705,8 @@
             <input type="date" id="vDate">
             <label style="margin-top:14px">المبلغ</label>
             <input type="number" id="vAmount" step="0.001" placeholder="0.000">
+            <label style="margin-top:14px">الجهة / الخزينة</label>
+            <input type="text" id="vUnit" placeholder="اسم الجهة أو الخزينة">
           </div>
           <div>
             <label>المستفيد</label>
@@ -141,45 +715,160 @@
             <textarea id="vDesc" rows="3" placeholder="سبب الصرف أو الوصف"></textarea>
             <label style="margin-top:14px">مرفق السند (PDF أو صورة)</label>
             <div class="drop" id="dVoucher" onclick="voucherFileIn.click()">اضغطي لاختيار ملف السند</div>
-            <input type="file" id="voucherFileIn" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+            <input type="file" id="voucherFileIn" accept="application/pdf,image/*" class="hidden">
+            <div id="voucherOcrHint" class="muted" style="margin-top:10px"></div>
           </div>
         </div>
         <button class="btn" id="addVoucherBtn" onclick="addVoucher()">حفظ السند</button>
         <div id="vErr" class="err hidden"></div>
       </div>
 
+      <!-- أرشيف السندات -->
       <div class="card">
+        <div class="step-tag">الأرشيف</div>
         <h2>أرشيف السندات</h2>
         <div class="filters">
-          <input type="text" id="fQ" placeholder="بحث: رقم السند / المستفيد / البيان">
+          <input type="text" id="fQ" placeholder="بحث: رقم السند / المستفيد / الجهة / OCR">
           <input type="date" id="fFrom" title="من تاريخ">
           <input type="date" id="fTo" title="إلى تاريخ">
           <input type="number" id="fMin" placeholder="أقل مبلغ">
           <input type="number" id="fMax" placeholder="أعلى مبلغ">
+          <select id="fStatus">
+            <option value="">كل الحالات</option>
+            <option value="draft">مسودة</option>
+            <option value="approved">معتمد</option>
+            <option value="cancelled">ملغي</option>
+          </select>
         </div>
-        <button class="btn ghost sm" onclick="loadVouchers()">بحث</button>
-        <div id="vouchersBox" style="margin-top:16px"></div>
+        <div class="card-actions">
+          <button class="btn ghost sm" onclick="loadVouchers()"><i class="bi bi-search"></i> بحث</button>
+          <button class="btn ghost sm" onclick="exportVoucherReport('excel')"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+          <button class="btn ghost sm" onclick="exportVoucherReport('pdf')"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        </div>
+        <div class="tbl-wrap" id="vouchersBox" style="margin-top:16px"></div>
       </div>
     </div>
 
+    <!-- ══ صفحة التدقيق ══ -->
     <div id="page-audit" class="hidden">
-      <div class="card"><h2>سجل التدقيق</h2><div id="auditBox"></div></div>
+      <div class="page-intro">
+        <div class="page-intro-icon"><i class="bi bi-shield-check"></i></div>
+        <div>
+          <h3>سجل التدقيق</h3>
+          <p>مراجعة جميع الإجراءات والأنشطة المسجّلة في النظام</p>
+        </div>
+      </div>
+
+      <!-- شريط الأدوات -->
+      <div class="card" style="padding:18px 22px;margin-top:18px">
+        <div class="audit-toolbar">
+          <div class="audit-filters">
+            <input  type="text"   id="auditSearch"       placeholder="🔎 بحث: مستخدم / تفاصيل…" oninput="filterAudit()">
+            <select id="auditActionFilter" onchange="filterAudit()">
+              <option value="">كل الإجراءات</option>
+              <option value="login">دخول</option>
+              <option value="reconcile">تسوية</option>
+              <option value="approve">اعتماد</option>
+              <option value="export">تصدير</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn ghost sm" onclick="loadAudit()"><i class="bi bi-arrow-clockwise"></i> تحديث</button>
+            <button class="btn danger sm" onclick="clearAuditAll()"><i class="bi bi-trash-fill"></i> حذف الكل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- إحصاءات سريعة -->
+      <div class="audit-stats" id="auditStats"></div>
+
+      <!-- بطاقة الأنشطة -->
+      <div class="card" style="padding:20px 24px">
+        <div class="audit-feed" id="auditBox"></div>
+      </div>
+    </div>
+
+    <!-- ══ صفحة إدارة المستخدمين ══ -->
+    <div id="page-users" class="hidden">
+      <div class="page-intro">
+        <div class="page-intro-icon"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <h3>إدارة المستخدمين</h3>
+          <p>إضافة المستخدمين وتعديل صلاحياتهم وحذفهم</p>
+        </div>
+      </div>
+
+      <!-- شريط الأدوات -->
+      <div class="card" style="padding:16px 22px;margin-top:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="font-size:13px;color:var(--mut)"><i class="bi bi-info-circle" style="margin-inline-end:5px"></i>يمكن للمدير فقط إدارة المستخدمين</div>
+          <button class="btn sm" onclick="openAddUser()"><i class="bi bi-person-plus-fill"></i> إضافة مستخدم</button>
+        </div>
+      </div>
+
+      <!-- بطاقات المستخدمين -->
+      <div class="users-grid" id="usersBox" style="margin-top:18px">
+        <div class="muted">جارٍ التحميل…</div>
+      </div>
+    </div>
+
+  </div><!-- /wrap -->
+  </div><!-- /page-content -->
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="footer-logo">ت</div>
+          نظام التسوية البنكية الآلية
+        </div>
+        <span>مطابقة دفتر الخزينة مع كشف البنك &nbsp;·&nbsp; جميع الحقوق محفوظة © 2025</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal: إضافة / تعديل مستخدم -->
+  <div id="userModal" class="modal-bg hidden" onclick="if(event.target===this)closeUserModal()">
+    <div class="modal" style="width:min(460px,94vw)">
+      <h3 id="userModalTitle" style="color:var(--navy);margin-bottom:18px">إضافة مستخدم</h3>
+      <label>الاسم الكامل</label>
+      <input type="text" id="umFullName" placeholder="الاسم الكامل للمستخدم">
+      <label style="margin-top:12px">اسم المستخدم (username)</label>
+      <input type="text" id="umUsername" placeholder="بدون مسافات">
+      <label style="margin-top:12px">الدور</label>
+      <select id="umRole">
+        <option value="entry">موظف إدخال</option>
+        <option value="supervisor">مشرف</option>
+        <option value="admin">مدير النظام</option>
+      </select>
+      <label style="margin-top:12px" id="umPwdLabel">كلمة المرور</label>
+      <input type="password" id="umPassword" placeholder="6 أحرف على الأقل">
+      <div id="userModalErr" class="err hidden" style="margin-top:14px"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn" id="userModalSaveBtn" onclick="saveUser()">حفظ</button>
+        <button class="btn ghost sm" onclick="closeUserModal()">إلغاء</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="filePreview" class="hidden"></div>
+
+
+</div><!-- /appView -->
+
+<div id="voucherPreviewPanel" class="side-preview hidden"></div>
 
 <script>
 const TOKEN_KEY = 'taswiya_token';
 let TOKEN = localStorage.getItem(TOKEN_KEY);
-let USER = null, result=null, chart=null;
+let USER = null, result=null, chart=null, voucherChart=null, dashRunChart=null, dashVoucherChart=null;
 const ledgerIn=document.getElementById('ledgerIn'), bankIn=document.getElementById('bankIn');
 const META={matched:{t:'دفعات مطابقة',c:'s-green',cl:'#2e9e5b'},amount_diff:{t:'فرق في الإجمالي',c:'s-amber',cl:'#e08a1e'},
   ledger_only:{t:'في النظام فقط',c:'s-yellow',cl:'#caa324'},bank_only:{t:'في البنك فقط',c:'s-blue',cl:'#2f74c0'},
   duplicates:{t:'صرف مكرر',c:'s-red',cl:'#d2415a'}};
 const fmt=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:3});
 const H=()=>({'Authorization':'Bearer '+TOKEN});
+let voucherOcrText = '';
+let voucherOcrSource = '';
 
 async function initApp(){
   if(!TOKEN){
@@ -192,8 +881,15 @@ async function initApp(){
     USER = await res.json();
     document.getElementById('uName').textContent = USER.full_name;
     document.getElementById('uRole').textContent = roleAr(USER.role);
-    if(USER.role === 'admin') document.getElementById('nav-audit').classList.remove('hidden');
+    if(USER.role === 'admin'){
+      document.getElementById('nav-audit').classList.remove('hidden');
+      document.getElementById('nav-users').classList.remove('hidden');
+      const dab=document.getElementById('dashAuditBtn');
+      if(dab)dab.classList.remove('hidden');
+    }
     document.getElementById('appView').classList.remove('hidden');
+    document.getElementById('userModal').classList.add('hidden');
+    go('dash');
   } catch (err) {
     localStorage.removeItem(TOKEN_KEY);
     location.href = '/';
@@ -210,12 +906,16 @@ function roleAr(r){return {admin:'مدير النظام',supervisor:'مشرف',e
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.remove('hidden');}
 
 function go(pg){
-  ['new','hist','vouchers','audit'].forEach(x=>{
-    document.getElementById('page-'+x).classList.toggle('hidden',x!==pg);
-    document.getElementById('nav-'+x).classList.toggle('active',x===pg);});
+  closeUserModal();
+  ['dash','new','hist','vouchers','audit','users'].forEach(x=>{
+    const p=document.getElementById('page-'+x);if(p)p.classList.toggle('hidden',x!==pg);
+    const n=document.getElementById('nav-'+x);if(n)n.classList.toggle('active',x===pg);
+  });
+  if(pg==='dash')loadDashboard();
   if(pg==='hist')loadHistory();
-  if(pg==='vouchers')loadVouchers();
+  if(pg==='vouchers'){loadVoucherDashboard();loadVouchers();}
   if(pg==='audit')loadAudit();
+  if(pg==='users')loadUsers();
 }
 
 ledgerIn.onchange=async()=>{const f=ledgerIn.files[0];if(!f)return;setDrop('dLedger',f.name);
@@ -251,7 +951,7 @@ function renderResult(){
       <div class="cards">${statCards(s)}</div></div>
     <div class="card"><h2>③ توزيع الحالات</h2><div class="chartbox"><canvas id="chart"></canvas></div></div>
     <div class="card"><h2>④ التفاصيل</h2><div class="tabs" id="tabs"></div><div id="tableBox"></div>
-      <button class="btn ghost" onclick="download()" style="margin-top:18px">⬇ تحميل تقرير Excel الملوّن</button></div>`;
+      <button class="btn ghost" onclick="download()" style="margin-top:18px"><i class="bi bi-download"></i> تحميل تقرير Excel الملوّن</button></div>`;
   drawChart(s);
   buildTabs(result,'tabs','tableBox');
 }
@@ -317,9 +1017,9 @@ async function openRun(id){
       <div class="cards">${statCards(s)}</div>
       ${run.approved_at?`<p class="muted" style="text-align:right">اعتُمدت بتاريخ ${run.approved_at.slice(0,16).replace('T',' ')}</p>`:''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-        ${canApprove?`<button class="btn sm" onclick="approve(${run.id})">✓ اعتماد التسوية</button>`:''}
-        ${canManage?`<button class="btn sm ghost" onclick="editRun(${run.id})">✎ تعديل التسوية</button>`:''}
-        ${canManage?`<button class="btn sm danger" onclick="deleteRun(${run.id})">🗑 حذف التسوية</button>`:''}
+        ${canApprove?`<button class="btn sm" onclick="approve(${run.id})"><i class="bi bi-check-circle-fill"></i> اعتماد التسوية</button>`:''}
+        ${canManage?`<button class="btn sm ghost" onclick="editRun(${run.id})"><i class="bi bi-pencil"></i> تعديل التسوية</button>`:''}
+        ${canManage?`<button class="btn sm danger" onclick="deleteRun(${run.id})"><i class="bi bi-trash"></i> حذف التسوية</button>`:''}
       </div>
     </div>
     <div class="card"><h2>التفاصيل</h2><div class="tabs" id="dtabs"></div><div id="dbox"></div></div>`;
@@ -360,7 +1060,47 @@ async function editRun(id){
 }
 
 const voucherFileIn=document.getElementById('voucherFileIn');
-voucherFileIn.onchange=()=>{if(voucherFileIn.files[0])setDrop('dVoucher',voucherFileIn.files[0].name);};
+voucherFileIn.onchange=async()=>{
+  const file=voucherFileIn.files[0];
+  voucherOcrText = '';
+  voucherOcrSource = '';
+  document.getElementById('voucherOcrHint').textContent='';
+  if(!file)return;
+  setDrop('dVoucher',file.name);
+  if(!/\.(pdf|jpg|jpeg|png|webp|bmp)$/i.test(file.name)) return;
+  const hint=document.getElementById('voucherOcrHint');
+  hint.style.color='';
+  hint.textContent='جارٍ مسح المستند تلقائياً...';
+  const fd=new FormData();
+  fd.append('file',file);
+  try{
+    const r=await fetch('/vouchers/ocr',{method:'POST',headers:H(),body:fd});
+    const j=await r.json();
+    if(r.status===503){
+      hint.style.color='#B8860B';
+      hint.textContent='ميزة المسح التلقائي غير مفعّلة على الخادم — يرجى إدخال بيانات السند يدوياً.';
+      return;
+    }
+    if(r.status===422){
+      hint.style.color='#c0392b';
+      hint.textContent=j.detail||'تعذّر قراءة المستند — يرجى رفع نسخة أوضح.';
+      return;
+    }
+    if(!r.ok) throw new Error(j.detail||'تعذّر المسح');
+    voucherOcrText = j.ocr_text || '';
+    voucherOcrSource = j.ocr_source || '';
+    if(j.voucher_no) document.getElementById('vNo').value = j.voucher_no;
+    if(j.voucher_date) document.getElementById('vDate').value = j.voucher_date;
+    if(j.amount !== null && j.amount !== undefined) document.getElementById('vAmount').value = j.amount;
+    if(j.beneficiary) document.getElementById('vBeneficiary').value = j.beneficiary;
+    if(j.description) document.getElementById('vDesc').value = j.description;
+    hint.style.color='green';
+    hint.textContent='تمت قراءة صورة السند تلقائياً ✓ — راجع الحقول ثم احفظ.';
+  }catch(e){
+    hint.style.color='#c0392b';
+    hint.textContent='تعذّر الاتصال بالخادم: '+e.message;
+  }
+};
 
 async function addVoucher(){
   document.getElementById('vErr').classList.add('hidden');
@@ -374,17 +1114,23 @@ async function addVoucher(){
   fd.append('voucher_no',document.getElementById('vNo').value.trim());
   fd.append('voucher_date',date);
   fd.append('amount',amount);
+  fd.append('source_unit',document.getElementById('vUnit').value.trim());
   fd.append('beneficiary',beneficiary);
   fd.append('description',document.getElementById('vDesc').value.trim());
+  if(voucherOcrText) fd.append('ocr_text', voucherOcrText);
+  if(voucherOcrSource) fd.append('ocr_source', voucherOcrSource);
   if(voucherFileIn.files[0])fd.append('file',voucherFileIn.files[0]);
   try{
     const r=await fetch('/vouchers',{method:'POST',headers:H(),body:fd});
     if(!r.ok){const j=await r.json();throw new Error(j.detail||'خطأ');}
     document.getElementById('vNo').value='';document.getElementById('vDate').value='';
-    document.getElementById('vAmount').value='';document.getElementById('vBeneficiary').value='';
+    document.getElementById('vAmount').value='';document.getElementById('vUnit').value='';document.getElementById('vBeneficiary').value='';
     document.getElementById('vDesc').value='';voucherFileIn.value='';
     document.getElementById('dVoucher').textContent='اضغطي لاختيار ملف السند';
     document.getElementById('dVoucher').classList.remove('set');
+    document.getElementById('voucherOcrHint').textContent='';
+    voucherOcrText='';
+    voucherOcrSource='';
     loadVouchers();
   }catch(e){showErr('vErr','تعذّر حفظ السند: '+e.message);}
   btn.disabled=false;btn.textContent='حفظ السند';
@@ -397,11 +1143,13 @@ async function loadVouchers(){
   const to=document.getElementById('fTo').value;
   const min=document.getElementById('fMin').value;
   const max=document.getElementById('fMax').value;
+  const status=document.getElementById('fStatus').value;
   if(q)params.append('q',q);
   if(from)params.append('date_from',from);
   if(to)params.append('date_to',to);
   if(min)params.append('amount_min',min);
   if(max)params.append('amount_max',max);
+  if(status)params.append('status',status);
   const r=await fetch('/vouchers?'+params.toString(),{headers:H()});
   const vs=(await r.json()).vouchers;
   if(!vs.length){document.getElementById('vouchersBox').innerHTML='<div class="muted">لا توجد سندات مطابقة</div>';return;}
@@ -410,10 +1158,11 @@ async function loadVouchers(){
   const statusAr={draft:'مسودة',approved:'معتمد',cancelled:'ملغي'};
   document.getElementById('vouchersBox').innerHTML=`<table><thead><tr>
     <th>#</th><th>رقم السند</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ</th><th>البيان</th>
-    <th>الحالة</th><th>المرفق</th><th>إجراءات</th></tr></thead>
+    <th>الجهة/الخزينة</th><th>الحالة</th><th>المرفق</th><th>إجراءات</th></tr></thead>
     <tbody>${vs.map(v=>`<tr>
       <td>${v.id}</td><td>${v.voucher_no||'—'}</td><td>${v.voucher_date}</td><td>${v.beneficiary}</td>
       <td>${fmt(v.amount)} ${v.currency}</td><td>${v.description||''}</td>
+      <td>${v.source_unit||'—'}</td>
       <td><span class="badge b-${v.status}">${statusAr[v.status]}</span></td>
       <td>${v.file_path?`<button class="btn ghost sm" onclick="previewVoucher(${v.id})">معاينة</button>`:'—'}</td>
       <td>
@@ -440,21 +1189,373 @@ async function previewVoucher(id){
   if(!r.ok){alert('تعذّرت معاينة الملف');return;}
   const blob=await r.blob();const url=URL.createObjectURL(blob);
   const isPdf=blob.type==='application/pdf';
-  document.getElementById('filePreview').className='modal-bg';
-  document.getElementById('filePreview').innerHTML=`<div class="modal">
-    ${isPdf?`<embed src="${url}" type="application/pdf" width="600" height="700">`:`<img src="${url}">`}
-    <div style="margin-top:12px;display:flex;gap:10px">
-      <a class="btn sm" href="${url}" download>⬇ تحميل</a>
-      <button class="btn sm ghost" onclick="document.getElementById('filePreview').className='hidden'">إغلاق</button>
-    </div></div>`;
+  document.getElementById('voucherPreviewPanel').classList.remove('hidden');
+  document.getElementById('voucherPreviewPanel').innerHTML=`<h3>معاينة السند</h3>
+    <div class="meta">يمكنك مراجعة محتوى السند دون تنزيله، ثم إغلاق المعاينة عند الانتهاء.</div>
+    ${isPdf?`<embed src="${url}" type="application/pdf">`:`<img src="${url}">`}
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn sm" href="${url}" download><i class="bi bi-download"></i> تحميل</a>
+      <button class="btn sm ghost" onclick="document.getElementById('voucherPreviewPanel').classList.add('hidden')">إغلاق</button>
+    </div>`;
 }
 
+async function loadVoucherDashboard(){
+  const params=new URLSearchParams();
+  const q=document.getElementById('fQ')?.value?.trim();
+  const from=document.getElementById('fFrom')?.value;
+  const to=document.getElementById('fTo')?.value;
+  const min=document.getElementById('fMin')?.value;
+  const max=document.getElementById('fMax')?.value;
+  const status=document.getElementById('fStatus')?.value;
+  if(q)params.append('q',q);
+  if(from)params.append('date_from',from);
+  if(to)params.append('date_to',to);
+  if(min)params.append('amount_min',min);
+  if(max)params.append('amount_max',max);
+  if(status)params.append('status',status);
+  const r=await fetch('/vouchers/summary?'+params.toString(),{headers:H()});
+  if(!r.ok) return;
+  const j=await r.json();
+  const cards=[
+    {n:j.counts.draft||0,t:'سندات مسودة',c:'s-amber'},
+    {n:j.counts.approved||0,t:'سندات معتمدة',c:'s-green'},
+    {n:j.counts.cancelled||0,t:'سندات ملغية',c:'s-red'},
+    {n:fmt(j.total_amount||0),t:'إجمالي المبالغ',c:'s-blue'},
+    {n:(j.recent||[]).length,t:'آخر السندات',c:'s-yellow'},
+  ];
+  document.getElementById('voucherStats').innerHTML=cards.map(x=>`<div class="stat ${x.c}"><div class="n">${x.n}</div><div class="t">${x.t}</div><div class="s">&nbsp;</div></div>`).join('');
+  if(voucherChart) voucherChart.destroy();
+  voucherChart=new Chart(document.getElementById('voucherChart'),{type:'bar',data:{labels:['مسودة','معتمد','ملغي'],datasets:[{label:'عدد السندات',data:[j.counts.draft||0,j.counts.approved||0,j.counts.cancelled||0],backgroundColor:['#e08a1e','#2e9e5b','#d2415a']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+}
+
+async function exportVoucherReport(format){
+  const params=new URLSearchParams();
+  const q=document.getElementById('fQ').value.trim();
+  const from=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  const min=document.getElementById('fMin').value;
+  const max=document.getElementById('fMax').value;
+  const status=document.getElementById('fStatus').value;
+  if(q)params.append('q',q);
+  if(from)params.append('date_from',from);
+  if(to)params.append('date_to',to);
+  if(min)params.append('amount_min',min);
+  if(max)params.append('amount_max',max);
+  if(status)params.append('status',status);
+  params.append('format',format);
+  const r=await fetch('/vouchers/report?'+params.toString(),{headers:H()});
+  if(!r.ok){alert((await r.json()).detail||'تعذّر إنشاء التقرير');return;}
+  const blob=await r.blob();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=format==='pdf'?'vouchers_report.pdf':'vouchers_report.xlsx';a.click();
+}
+
+let auditData=[];
+
+const AUDIT_META={
+  login:    {lbl:'دخول إلى النظام',   icon:'bi-box-arrow-in-right', cls:'ai-login',    tag:'at-login',    stat:'asc-blue'},
+  reconcile:{lbl:'تشغيل تسوية',       icon:'bi-arrow-repeat',       cls:'ai-reconcile', tag:'at-reconcile',stat:'asc-navy'},
+  approve:  {lbl:'اعتماد تسوية',      icon:'bi-check-circle-fill',  cls:'ai-approve',  tag:'at-approve',  stat:'asc-green'},
+  export:   {lbl:'تصدير تقرير',       icon:'bi-download',           cls:'ai-export',   tag:'at-export',   stat:'asc-amber'},
+  delete:   {lbl:'حذف',              icon:'bi-trash',              cls:'ai-delete',   tag:'at-delete',   stat:'asc-red'},
+  voucher:  {lbl:'سند صرف',          icon:'bi-receipt-cutoff',     cls:'ai-voucher',  tag:'at-default',  stat:'asc-gray'},
+};
+function auditMeta(action){return AUDIT_META[action]||{lbl:action,icon:'bi-activity',cls:'ai-default',tag:'at-default',stat:'asc-gray'};}
+
 async function loadAudit(){
-  const r=await fetch('/audit',{headers:H()});if(!r.ok)return;
-  const a=(await r.json()).audit;const act={login:'دخول',reconcile:'تشغيل تسوية',approve:'اعتماد',export:'تصدير'};
-  document.getElementById('auditBox').innerHTML=`<table><thead><tr><th>#</th><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>الوقت</th></tr></thead>
-    <tbody>${a.map(x=>`<tr><td>${x.id}</td><td>${x.username||''}</td><td>${act[x.action]||x.action}</td>
-    <td>${x.detail||''}</td><td>${(x.created_at||'').slice(0,16).replace('T',' ')}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('auditBox').innerHTML='<div class="muted">جارٍ التحميل…</div>';
+  const r=await fetch('/audit',{headers:H()});
+  if(!r.ok){document.getElementById('auditBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
+  auditData=(await r.json()).audit||[];
+  renderAuditStats();
+  renderAuditFeed(auditData);
+}
+
+function renderAuditStats(){
+  const counts={};
+  auditData.forEach(x=>{counts[x.action]=(counts[x.action]||0)+1;});
+  const chips=[{k:'all',n:auditData.length,lbl:'الكل',sc:'asc-gray'}];
+  Object.entries(counts).forEach(([k,n])=>{
+    const m=auditMeta(k);
+    chips.push({k,n,lbl:m.lbl,sc:m.stat});
+  });
+  document.getElementById('auditStats').innerHTML=chips.map(c=>
+    `<span class="audit-stat-chip ${c.sc}"><i class="bi bi-circle-fill" style="font-size:7px"></i>${c.lbl}<b style="opacity:.75">(${c.n})</b></span>`
+  ).join('');
+}
+
+function renderAuditFeed(items){
+  const box=document.getElementById('auditBox');
+  if(!items.length){
+    box.innerHTML=`<div class="audit-empty"><i class="bi bi-shield-slash"></i>لا توجد سجلات مطابقة</div>`;
+    return;
+  }
+  box.innerHTML=items.map(x=>{
+    const m=auditMeta(x.action);
+    const dt=(x.created_at||'').slice(0,16).replace('T',' ');
+    const detail=x.detail?`<div class="audit-detail">${x.detail}</div>`:'';
+    return `<div class="audit-item" id="ai-${x.id}">
+      <div class="audit-icon ${m.cls}"><i class="bi ${m.icon}"></i></div>
+      <div class="audit-body">
+        <div class="audit-row1">
+          <span class="audit-action-lbl">${m.lbl}</span>
+          <span class="audit-tag ${m.tag}">${x.action}</span>
+        </div>
+        <div class="audit-meta">
+          <i class="bi bi-person-fill"></i><span>${x.username||'—'}</span>
+          <span>·</span>
+          <i class="bi bi-clock"></i><span>${dt}</span>
+          <span>·</span><span style="opacity:.6">#${x.id}</span>
+        </div>
+        ${detail}
+      </div>
+      <button class="audit-del-btn" onclick="deleteAudit(${x.id})" title="حذف هذا السجل"><i class="bi bi-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function filterAudit(){
+  const q=(document.getElementById('auditSearch')?.value||'').trim().toLowerCase();
+  const act=document.getElementById('auditActionFilter')?.value||'';
+  const filtered=auditData.filter(x=>{
+    const matchAct=!act||x.action===act;
+    const matchQ=!q||(x.username||'').toLowerCase().includes(q)||(x.detail||'').toLowerCase().includes(q)||(x.action||'').includes(q);
+    return matchAct&&matchQ;
+  });
+  renderAuditFeed(filtered);
+}
+
+async function deleteAudit(id){
+  if(!confirm('هل تريد حذف هذا السجل؟'))return;
+  const r=await fetch('/audit/'+id,{method:'DELETE',headers:H()});
+  if(r.ok){
+    auditData=auditData.filter(x=>x.id!==id);
+    const el=document.getElementById('ai-'+id);
+    if(el){el.style.opacity='0';el.style.transform='translateX(20px)';el.style.transition='.25s';setTimeout(()=>{el.remove();renderAuditStats();},250);}
+  }else{alert((await r.json()).detail||'تعذّر الحذف');}
+}
+
+async function clearAuditAll(){
+  if(!confirm('هل أنت متأكد من حذف جميع سجلات النشاط؟ هذا الإجراء لا يمكن التراجع عنه.'))return;
+  const r=await fetch('/audit',{method:'DELETE',headers:H()});
+  if(r.ok){auditData=[];renderAuditStats();renderAuditFeed([]);}
+  else{alert((await r.json()).detail||'تعذّر الحذف');}
+}
+
+/* ══ User Management ══ */
+let usersData=[], editingUserId=null;
+const ROLE_AR={admin:'مدير النظام',supervisor:'مشرف',entry:'موظف إدخال'};
+const AVATAR_CLS={admin:'ua-admin',supervisor:'ua-supervisor',entry:'ua-entry'};
+const ROLE_BADGE_CLS={admin:'urb-admin',supervisor:'urb-supervisor',entry:'urb-entry'};
+
+async function loadUsers(){
+  document.getElementById('usersBox').innerHTML='<div class="muted">جارٍ التحميل…</div>';
+  const r=await fetch('/users',{headers:H()});
+  if(!r.ok){document.getElementById('usersBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
+  usersData=(await r.json()).users||[];
+  renderUsers();
+}
+
+function renderUsers(){
+  const box=document.getElementById('usersBox');
+  if(!usersData.length){box.innerHTML='<div class="muted" style="grid-column:1/-1">لا يوجد مستخدمون</div>';return;}
+  box.innerHTML=usersData.map((u,i)=>{
+    const initial=(u.full_name||u.username||'?')[0];
+    const canDel=u.id!==USER?.id;
+    return `<div class="user-card" id="ucard-${u.id}" style="animation-delay:${i*0.06}s">
+      <div class="user-avatar ${AVATAR_CLS[u.role]||'ua-entry'}">${initial}</div>
+      <div class="user-body">
+        <div class="user-fullname">${u.full_name||'—'}</div>
+        <div class="user-uname"><i class="bi bi-at" style="font-size:11px"></i>${u.username}</div>
+        <span class="user-role-badge ${ROLE_BADGE_CLS[u.role]||'urb-entry'}">
+          <i class="bi bi-shield-fill" style="font-size:9px"></i>${ROLE_AR[u.role]||u.role}
+        </span>
+      </div>
+      <div class="user-card-actions">
+        <button class="uca-btn" onclick="openEditUser(${u.id})" title="تعديل"><i class="bi bi-pencil"></i></button>
+        ${canDel?`<button class="uca-btn danger" onclick="deleteUser(${u.id})" title="حذف"><i class="bi bi-trash"></i></button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddUser(){
+  editingUserId=null;
+  document.getElementById('userModalTitle').textContent='إضافة مستخدم جديد';
+  document.getElementById('umFullName').value='';
+  document.getElementById('umUsername').value='';
+  document.getElementById('umUsername').disabled=false;
+  document.getElementById('umRole').value='entry';
+  document.getElementById('umPassword').value='';
+  document.getElementById('umPwdLabel').classList.remove('hidden');
+  document.getElementById('umPassword').classList.remove('hidden');
+  document.getElementById('userModalErr').classList.add('hidden');
+  document.getElementById('userModal').classList.remove('hidden');
+}
+
+function openEditUser(id){
+  const u=usersData.find(x=>x.id===id);if(!u)return;
+  editingUserId=id;
+  document.getElementById('userModalTitle').textContent='تعديل المستخدم';
+  document.getElementById('umFullName').value=u.full_name||'';
+  document.getElementById('umUsername').value=u.username;
+  document.getElementById('umUsername').disabled=true;
+  document.getElementById('umRole').value=u.role;
+  document.getElementById('umPwdLabel').classList.add('hidden');
+  document.getElementById('umPassword').classList.add('hidden');
+  document.getElementById('userModalErr').classList.add('hidden');
+  document.getElementById('userModal').classList.remove('hidden');
+}
+
+function closeUserModal(){document.getElementById('userModal').classList.add('hidden');}
+
+async function saveUser(){
+  const fullName=document.getElementById('umFullName').value.trim();
+  const username=document.getElementById('umUsername').value.trim();
+  const role=document.getElementById('umRole').value;
+  const password=document.getElementById('umPassword').value;
+  const errEl=document.getElementById('userModalErr');
+  errEl.classList.add('hidden');
+  const btn=document.getElementById('userModalSaveBtn');
+  btn.disabled=true;btn.innerHTML='جارٍ الحفظ<span class="spin"></span>';
+  try{
+    if(editingUserId){
+      const payload={role,full_name:fullName};
+      const r=await fetch('/users/'+editingUserId,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!r.ok){errEl.textContent=(await r.json()).detail||'خطأ';errEl.classList.remove('hidden');return;}
+    }else{
+      if(!fullName||!username||!password){errEl.textContent='الاسم واسم المستخدم وكلمة المرور مطلوبة';errEl.classList.remove('hidden');return;}
+      const fd=new FormData();
+      fd.append('full_name',fullName);fd.append('username',username);
+      fd.append('role',role);fd.append('password',password);
+      const r=await fetch('/users',{method:'POST',headers:H(),body:fd});
+      if(!r.ok){errEl.textContent=(await r.json()).detail||'خطأ';errEl.classList.remove('hidden');return;}
+    }
+    closeUserModal();loadUsers();
+  }finally{btn.disabled=false;btn.textContent='حفظ';}
+}
+
+async function deleteUser(id){
+  const u=usersData.find(x=>x.id===id);
+  if(!confirm(`هل تريد حذف المستخدم "${u?.full_name||id}"؟ هذا الإجراء لا يمكن التراجع عنه.`))return;
+  const r=await fetch('/users/'+id,{method:'DELETE',headers:H()});
+  if(r.ok){
+    usersData=usersData.filter(x=>x.id!==id);
+    const el=document.getElementById('ucard-'+id);
+    if(el){el.style.opacity='0';el.style.transform='scale(.95)';el.style.transition='.22s';setTimeout(()=>el.remove(),220);}
+  }else{alert((await r.json()).detail||'تعذّر الحذف');}
+}
+
+
+/* ══ Dashboard ══ */
+function initDashDate(){
+  const now=new Date();
+  const days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const el=document.getElementById('dashDate');
+  if(el) el.textContent=`${days[now.getDay()]}، ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const h=now.getHours();
+  const g=h<12?'صباح الخير':h<17?'مساء الخير':'مساء النور';
+  const gEl=document.getElementById('dashGreet');
+  if(gEl) gEl.textContent=`${g}، ${USER?.full_name?.split(' ')[0]||''}`;
+}
+
+async function loadDashboard(){
+  initDashDate();
+  try{
+    const [runsRes,vSumRes,vListRes]=await Promise.all([
+      fetch('/runs',{headers:H()}),
+      fetch('/vouchers/summary',{headers:H()}),
+      fetch('/vouchers',{headers:H()})
+    ]);
+    const runs=(await runsRes.json()).runs||[];
+    const vs=vSumRes.ok?await vSumRes.json():{counts:{},total_amount:0};
+    const vouchers=vListRes.ok?((await vListRes.json()).vouchers||[]).slice(0,5):[];
+
+    /* KPI */
+    const totalRuns=runs.length;
+    const approvedRuns=runs.filter(r=>r.status==='approved').length;
+    const draftRuns=runs.filter(r=>r.status!=='approved').length;
+    const kpis=[
+      {n:totalRuns,   l:'إجمالي التسويات',  s:'كل التسويات البنكية',          cls:'kpi-navy',  icon:'bi-arrow-repeat'},
+      {n:approvedRuns,l:'تسويات معتمدة',    s:'مؤكدة ومكتملة',               cls:'kpi-green', icon:'bi-check-circle-fill'},
+      {n:draftRuns,   l:'تسويات مسودة',     s:'بانتظار الاعتماد',            cls:'kpi-amber', icon:'bi-hourglass-split'},
+      {n:vs.counts?.approved||0,l:'سندات معتمدة',s:`إجمالي: ${fmt(vs.total_amount||0)} ر.ع`,cls:'kpi-teal',icon:'bi-receipt-cutoff'},
+    ];
+    document.getElementById('dashKpis').innerHTML=kpis.map((k,i)=>`
+      <div class="kpi-card ${k.cls}" style="animation-delay:${i*0.07}s">
+        <div class="kpi-icon"><i class="bi ${k.icon}"></i></div>
+        <div class="kpi-num">${k.n}</div>
+        <div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-sub">${k.s}</div>
+      </div>`).join('');
+
+    /* Bar chart — monthly reconciliations */
+    const monthly={};
+    runs.forEach(r=>{const m=(r.created_at||'').slice(0,7);monthly[m]=(monthly[m]||0)+1;});
+    const mKeys=Object.keys(monthly).sort().slice(-6);
+    const mNames=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const mLabels=mKeys.map(k=>mNames[parseInt(k.split('-')[1])-1]);
+    const mVals=mKeys.map(k=>monthly[k]);
+    if(dashRunChart)dashRunChart.destroy();
+    dashRunChart=new Chart(document.getElementById('dashRunChart'),{
+      type:'bar',
+      data:{labels:mLabels,datasets:[{label:'عدد التسويات',data:mVals,
+        backgroundColor:mVals.map((_,i)=>i===mVals.length-1?'rgba(43,181,174,.90)':'rgba(43,181,174,.40)'),
+        borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} تسوية`}}},
+        scales:{y:{grid:{color:'rgba(30,58,95,.06)'},ticks:{font:{family:'Tajawal',size:12},stepSize:1}},
+          x:{grid:{display:false},ticks:{font:{family:'Tajawal',size:12}}}}}
+    });
+
+    /* Donut chart — voucher status */
+    if(dashVoucherChart)dashVoucherChart.destroy();
+    dashVoucherChart=new Chart(document.getElementById('dashVoucherChart'),{
+      type:'doughnut',
+      data:{labels:['مسودة','معتمد','ملغي'],
+        datasets:[{data:[vs.counts?.draft||0,vs.counts?.approved||0,vs.counts?.cancelled||0],
+          backgroundColor:['#e08a1e','#2e9e5b','#d2415a'],borderWidth:3,borderColor:'#fff'}]},
+      options:{cutout:'65%',maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12},padding:12}}}}
+    });
+
+    /* Recent runs */
+    const runsEl=document.getElementById('dashRecentRuns');
+    if(!runs.length){runsEl.innerHTML='<div class="muted">لا توجد تسويات بعد</div>';}
+    else{runsEl.innerHTML=runs.slice(0,5).map(r=>`
+      <div class="act-item">
+        <div class="act-dot ${r.status==='approved'?'green':'amber'}">
+          <i class="bi ${r.status==='approved'?'bi-check-lg':'bi-hourglass-split'}"></i></div>
+        <div>
+          <div class="act-title">تسوية #${r.id} — ${r.sheet||'—'}</div>
+          <div class="act-meta">
+            <span>${(r.created_at||'').slice(0,10)}</span>
+            <span>·</span><span>${r.matched} مطابقة</span>
+            <span>·</span><span class="badge b-${r.status}">${r.status==='approved'?'معتمدة':'مسودة'}</span>
+          </div>
+        </div>
+      </div>`).join('');}
+
+    /* Recent vouchers */
+    const vEl=document.getElementById('dashRecentVouchers');
+    const statusColor={draft:'amber',approved:'green',cancelled:'red'};
+    const statusIcon={draft:'bi-hourglass-split',approved:'bi-check-lg',cancelled:'bi-x-lg'};
+    const statusAr={draft:'مسودة',approved:'معتمد',cancelled:'ملغي'};
+    if(!vouchers.length){vEl.innerHTML='<div class="muted">لا توجد سندات بعد</div>';}
+    else{vEl.innerHTML=vouchers.map(v=>`
+      <div class="act-item">
+        <div class="act-dot ${statusColor[v.status]||'blue'}">
+          <i class="bi ${statusIcon[v.status]||'bi-receipt'}"></i></div>
+        <div>
+          <div class="act-title">${v.beneficiary} — ${fmt(v.amount)} ${v.currency}</div>
+          <div class="act-meta">
+            <span>${v.voucher_date}</span>
+            <span>·</span><span class="badge b-${v.status}">${statusAr[v.status]||v.status}</span>
+          </div>
+        </div>
+      </div>`).join('');}
+
+  }catch(e){console.error('dashboard error',e);}
 }
 </script>
 </body>
