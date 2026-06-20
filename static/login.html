@@ -41,20 +41,30 @@
       const user = document.getElementById('u').value.trim();
       const pass = document.getElementById('p').value;
       const err = document.getElementById('loginErr');
+      const btn = document.querySelector('.btn');
       err.classList.remove('visible'); err.textContent='';
-      const fd = new FormData();
-      fd.append('username', user);
-      fd.append('password', pass);
-      const res = await fetch('/login',{method:'POST', body: fd});
-      if(!res.ok){
-        const data = await res.json().catch(()=>({detail:'فشل الاتصال'}));
-        err.textContent = data.detail || 'فشل تسجيل الدخول';
+      if(!user||!pass){err.textContent='يرجى إدخال اسم المستخدم وكلمة المرور';err.classList.add('visible');return;}
+      btn.disabled=true; btn.textContent='جارٍ الدخول...';
+      try{
+        const fd = new FormData();
+        fd.append('username', user);
+        fd.append('password', pass);
+        const res = await fetch('/login',{method:'POST', body: fd});
+        if(!res.ok){
+          const data = await res.json().catch(()=>({detail: res.status>=500 ? 'خطأ في الخادم — يرجى المحاولة مجدداً' : 'فشل الاتصال'}));
+          err.textContent = data.detail || 'فشل تسجيل الدخول';
+          err.classList.add('visible');
+          return;
+        }
+        const data = await res.json();
+        localStorage.setItem(TOKEN_KEY, data.token);
+        location.href = '/app';
+      }catch(e){
+        err.textContent = 'تعذّر الاتصال بالخادم — تحقق من اتصالك بالإنترنت';
         err.classList.add('visible');
-        return;
+      }finally{
+        btn.disabled=false; btn.textContent='دخول';
       }
-      const data = await res.json();
-      localStorage.setItem(TOKEN_KEY, data.token);
-      location.href = '/app';
     }
     document.getElementById('p').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
   </script>
