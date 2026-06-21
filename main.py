@@ -122,7 +122,7 @@ def _next_voucher_no(conn, voucher_date: str | None = None) -> str:
     ).fetchall()
     max_seq = 0
     for row in rows:
-        value = row[0] or ""
+        value = row["voucher_no"] or ""
         match = re.search(rf"{re.escape(prefix)}(\d+)$", value)
         if match:
             max_seq = max(max_seq, int(match.group(1)))
@@ -346,11 +346,11 @@ def _save_run(user, ledger_name, bank_name, sheet, result) -> int:
     cur = conn.execute(
         """INSERT INTO runs(created_by,created_at,ledger_name,bank_name,sheet,
            matched,amount_diff,ledger_only,bank_only,duplicates,matched_total,status)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?, 'draft')""",
+           VALUES(?,?,?,?,?,?,?,?,?,?,?, 'draft') RETURNING id""",
         (user["id"], datetime.utcnow().isoformat(), ledger_name, bank_name, sheet,
          s["matched"], s["amount_diff"], s["ledger_only"], s["bank_only"],
          s["duplicates"], s["matched_total"]))
-    run_id = cur.lastrowid
+    run_id = cur.fetchone()["id"]
     for cat in ("matched", "amount_diff", "ledger_only", "bank_only"):
         for b in result[cat]:
             conn.execute(
@@ -656,10 +656,10 @@ async def create_voucher(
     cur = conn.execute(
         """INSERT INTO vouchers(voucher_no,voucher_date,amount,currency,source_unit,beneficiary,
            description,ocr_text,ocr_source,file_path,file_name,created_by,created_at)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id""",
         (voucher_no, voucher_date, amount, currency, source_unit, beneficiary, description,
          extracted_ocr_text, extracted_ocr_source, file_path, file_name, user["id"], datetime.utcnow().isoformat()))
-    voucher_id = cur.lastrowid
+    voucher_id = cur.fetchone()["id"]
     conn.commit(); conn.close()
     log_action(user["id"], user["username"], "voucher_create", f"إضافة سند #{voucher_id}")
     return {"ok": True, "id": voucher_id}
