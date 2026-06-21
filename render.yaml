@@ -4,7 +4,7 @@ services:
     env: python
     region: frankfurt
     plan: free
-    buildCommand: apt-get update && apt-get install -y -q tesseract-ocr tesseract-ocr-ara && pip install -r requirements.txt
+    buildCommand: bash render-build.sh
     startCommand: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
