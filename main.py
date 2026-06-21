@@ -294,6 +294,14 @@ def app_page():
     return "<h1>Error: index.html not found</h1>"
 
 
+@app.get("/guide", response_class=HTMLResponse)
+def guide_page():
+    guide_file = STATIC_DIR / "guide.html"
+    if guide_file.exists():
+        return guide_file.read_text(encoding="utf-8")
+    return "<h1>Error: guide.html not found</h1>"
+
+
 # ───────────── المصادقة ─────────────
 @app.post("/login")
 async def do_login(username: str = Form(...), password: str = Form(...)):
