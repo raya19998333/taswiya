@@ -1,13 +1,9 @@
 services:
   - type: web
     name: taswiya
-    env: python
+    env: docker
     region: frankfurt
     plan: free
-    buildCommand: bash render-build.sh
-    startCommand: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.12"
       - key: DATABASE_URL
         sync: false
