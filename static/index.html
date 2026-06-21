@@ -869,9 +869,24 @@ const fmt=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:3});
 const H=()=>({'Authorization':'Bearer '+TOKEN});
 let voucherOcrText = '';
 let voucherOcrSource = '';
+
+function esc(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 async function safeErr(r, fb='خطأ في الخادم') {
   try { const j = await r.json(); return j.detail || fb; }
   catch { return r.statusText || fb; }
+}
+
+async function apiFetch(url, opts={}){
+  const res = await fetch(url, opts);
+  if(res.status === 401){
+    localStorage.removeItem(TOKEN_KEY);
+    location.href = '/';
+    return null;
+  }
+  return res;
 }
 
 async function initApp(){
@@ -924,8 +939,10 @@ function go(pg){
 
 ledgerIn.onchange=async()=>{const f=ledgerIn.files[0];if(!f)return;setDrop('dLedger',f.name);
   const fd=new FormData();fd.append('file',f);
-  const r=await fetch('/sheets',{method:'POST',headers:H(),body:fd});const j=await r.json();
-  document.getElementById('sheetSel').innerHTML=j.sheets.map(s=>`<option>${s}</option>`).join('');checkReady();};
+  const r=await apiFetch('/sheets',{method:'POST',headers:H(),body:fd});
+  if(!r||!r.ok)return;
+  const j=await r.json();
+  document.getElementById('sheetSel').innerHTML=j.sheets.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');checkReady();};
 bankIn.onchange=()=>{if(bankIn.files[0]){setDrop('dBank',bankIn.files[0].name);checkReady();}};
 function setDrop(id,name){const d=document.getElementById(id);d.textContent='✓ '+name;d.classList.add('set');}
 function checkReady(){document.getElementById('runBtn').disabled=!(ledgerIn.files[0]&&bankIn.files[0]);}
@@ -936,7 +953,8 @@ async function run(){
   btn.disabled=true;btn.innerHTML='جارٍ المطابقة<span class="spin"></span>';
   const fd=new FormData();fd.append('ledger',ledgerIn.files[0]);fd.append('bank',bankIn.files[0]);
   fd.append('ledger_sheet',document.getElementById('sheetSel').value);
-  try{const r=await fetch('/reconcile',{method:'POST',headers:H(),body:fd});
+  try{const r=await apiFetch('/reconcile',{method:'POST',headers:H(),body:fd});
+    if(!r){btn.disabled=false;btn.textContent='تشغيل المطابقة';return;}
     if(!r.ok){throw new Error(await safeErr(r));}
     result=await r.json();renderResult();
   }catch(e){showErr('err','تعذّرت المطابقة: '+e.message);}
@@ -981,43 +999,52 @@ function showTab(k,boxId,el){
   if(!rows.length){box.innerHTML='<div class="muted">لا توجد سجلات في هذه الفئة 👌</div>';return;}
   let head,body;
   if(k==='duplicates'){head=['التاريخ','الرقم المرجعي','المبلغ','البيان','المستفيد'];
-    body=rows.map(e=>[e.txn_date||'',e.ref||'',fmt(Math.abs(e.amount)),e.description,e.employee||'']);}
+    body=rows.map(e=>[esc(e.txn_date),esc(e.ref),fmt(Math.abs(e.amount)),esc(e.description),esc(e.employee)]);}
   else if(k==='bank_only'){head=['الرقم المرجعي','إجمالي البنك','البيان'];
-    body=rows.map(b=>[b.ref,fmt(b.bank_total),b.description]);}
+    body=rows.map(b=>[esc(b.ref),fmt(b.bank_total),esc(b.description)]);}
   else{head=['الرقم المرجعي','إجمالي النظام','إجمالي البنك','الفرق','البيان'];
-    body=rows.map(b=>[b.ref,fmt(b.ledger_total),fmt(b.bank_total),fmt(b.diff),b.description]);}
-  box.innerHTML=`<table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-    <tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    body=rows.map(b=>[esc(b.ref),fmt(b.ledger_total),fmt(b.bank_total),fmt(b.diff),esc(b.description)]);}
+  box.innerHTML=`<table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead>
+    <tbody>${body.map(row=>`<tr>${row.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 
 async function download(){
+  if(!ledgerIn.files[0]||!bankIn.files[0]){alert('يرجى رفع الملفات أولاً');return;}
   const fd=new FormData();fd.append('ledger',ledgerIn.files[0]);fd.append('bank',bankIn.files[0]);
   fd.append('ledger_sheet',document.getElementById('sheetSel').value);
-  const r=await fetch('/report',{method:'POST',headers:H(),body:fd});const blob=await r.blob();
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='تقرير_المطابقة_البنكية.xlsx';a.click();
+  try{
+    const r=await apiFetch('/report',{method:'POST',headers:H(),body:fd});
+    if(!r)return;
+    if(!r.ok){alert(await safeErr(r,'تعذّر إنشاء التقرير'));return;}
+    const blob=await r.blob();
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='تقرير_المطابقة_البنكية.xlsx';a.click();
+  }catch(e){alert('تعذّر تحميل التقرير: '+e.message);}
 }
 
 async function loadHistory(){
   document.getElementById('runDetail').innerHTML='';
-  const r=await fetch('/runs',{headers:H()});const runs=(await r.json()).runs;
+  const res=await apiFetch('/runs',{headers:H()});if(!res)return;
+  if(!res.ok){document.getElementById('histBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
+  const runs=(await res.json()).runs;
   if(!runs.length){document.getElementById('histBox').innerHTML='<div class="muted">لا توجد تسويات بعد</div>';return;}
   document.getElementById('histBox').innerHTML=`<table><thead><tr>
     <th>#</th><th>الشهر</th><th>التاريخ</th><th>المنشئ</th><th>مطابقة</th><th>تنبيهات</th><th>الحالة</th></tr></thead>
-    <tbody>${runs.map(r=>{const alerts=r.amount_diff+r.ledger_only+r.bank_only+r.duplicates;
-      return `<tr class="clickrow" onclick="openRun(${r.id})"><td>${r.id}</td><td>${r.sheet||''}</td>
-      <td>${(r.created_at||'').slice(0,16).replace('T',' ')}</td><td>${r.creator||''}</td>
-      <td>${r.matched}</td><td>${alerts}</td>
-      <td><span class="badge b-${r.status}">${r.status==='approved'?'معتمدة':'مسودة'}</span></td></tr>`;}).join('')}</tbody></table>`;
+    <tbody>${runs.map(run=>{const alerts=run.amount_diff+run.ledger_only+run.bank_only+run.duplicates;
+      return `<tr class="clickrow" onclick="openRun(${run.id})"><td>${run.id}</td><td>${esc(run.sheet)}</td>
+      <td>${esc((run.created_at||'').slice(0,16).replace('T',' '))}</td><td>${esc(run.creator)}</td>
+      <td>${run.matched}</td><td>${alerts}</td>
+      <td><span class="badge b-${esc(run.status)}">${run.status==='approved'?'معتمدة':'مسودة'}</span></td></tr>`;}).join('')}</tbody></table>`;
 }
 async function openRun(id){
-  const r=await fetch('/runs/'+id,{headers:H()});const j=await r.json();const run=j.run;
+  const res=await apiFetch('/runs/'+id,{headers:H()});if(!res)return;
+  const j=await res.json();const run=j.run;
   const s={matched:run.matched,amount_diff:run.amount_diff,ledger_only:run.ledger_only,bank_only:run.bank_only,
     duplicates:run.duplicates,matched_total:run.matched_total};
   const canApprove=USER.role!=='entry'&&run.status==='draft';
   const canManage = USER.role==='admin';
   document.getElementById('runDetail').innerHTML=`
-    <div class="card"><h2>تسوية #${run.id} — ${run.sheet||''}
-      <span class="badge b-${run.status}">${run.status==='approved'?'معتمدة':'مسودة'}</span></h2>
+    <div class="card"><h2>تسوية #${run.id} — ${esc(run.sheet)}
+      <span class="badge b-${esc(run.status)}">${run.status==='approved'?'معتمدة':'مسودة'}</span></h2>
       <div class="cards">${statCards(s)}</div>
       ${run.approved_at?`<p class="muted" style="text-align:right">اعتُمدت بتاريخ ${run.approved_at.slice(0,16).replace('T',' ')}</p>`:''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
@@ -1033,13 +1060,15 @@ async function openRun(id){
   document.getElementById('runDetail').scrollIntoView({behavior:'smooth'});
 }
 async function approve(id){
-  const r=await fetch('/runs/'+id+'/approve',{method:'POST',headers:H()});
+  const r=await apiFetch('/runs/'+id+'/approve',{method:'POST',headers:H()});
+  if(!r)return;
   if(r.ok){loadHistory();openRun(id);}else{alert((await r.json()).detail);}
 }
 
 async function deleteRun(id){
   if(!confirm('هل أنت متأكد من حذف هذه التسوية؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
-  const r=await fetch('/runs/'+id,{method:'DELETE',headers:H()});
+  const r=await apiFetch('/runs/'+id,{method:'DELETE',headers:H()});
+  if(!r)return;
   if(r.ok){loadHistory();document.getElementById('runDetail').innerHTML='';}
   else{alert((await r.json()).detail);}
 }
@@ -1059,7 +1088,8 @@ async function editRun(id){
     alert('لم يتم تقديم بيانات جديدة للتعديل.');
     return;
   }
-  const r = await fetch('/runs/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const r = await apiFetch('/runs/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r)return;
   if(r.ok){loadHistory();openRun(id);}else{alert((await r.json()).detail);}
 }
 
@@ -1078,7 +1108,8 @@ voucherFileIn.onchange=async()=>{
   const fd=new FormData();
   fd.append('file',file);
   try{
-    const r=await fetch('/vouchers/ocr',{method:'POST',headers:H(),body:fd});
+    const r=await apiFetch('/vouchers/ocr',{method:'POST',headers:H(),body:fd});
+    if(!r)return;
     let j=null; try{j=await r.json();}catch{}
     if(r.status===503){
       hint.style.color='#B8860B';
@@ -1125,7 +1156,8 @@ async function addVoucher(){
   if(voucherOcrSource) fd.append('ocr_source', voucherOcrSource);
   if(voucherFileIn.files[0])fd.append('file',voucherFileIn.files[0]);
   try{
-    const r=await fetch('/vouchers',{method:'POST',headers:H(),body:fd});
+    const r=await apiFetch('/vouchers',{method:'POST',headers:H(),body:fd});
+    if(!r)return;
     if(!r.ok){throw new Error(await safeErr(r));}
     document.getElementById('vNo').value='';document.getElementById('vDate').value='';
     document.getElementById('vAmount').value='';document.getElementById('vUnit').value='';document.getElementById('vBeneficiary').value='';
@@ -1154,7 +1186,9 @@ async function loadVouchers(){
   if(min)params.append('amount_min',min);
   if(max)params.append('amount_max',max);
   if(status)params.append('status',status);
-  const r=await fetch('/vouchers?'+params.toString(),{headers:H()});
+  const r=await apiFetch('/vouchers?'+params.toString(),{headers:H()});
+  if(!r)return;
+  if(!r.ok){document.getElementById('vouchersBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
   const vs=(await r.json()).vouchers;
   if(!vs.length){document.getElementById('vouchersBox').innerHTML='<div class="muted">لا توجد سندات مطابقة</div>';return;}
   const canManage=USER.role==='admin';
@@ -1164,10 +1198,10 @@ async function loadVouchers(){
     <th>#</th><th>رقم السند</th><th>التاريخ</th><th>المستفيد</th><th>المبلغ</th><th>البيان</th>
     <th>الجهة/الخزينة</th><th>الحالة</th><th>المرفق</th><th>إجراءات</th></tr></thead>
     <tbody>${vs.map(v=>`<tr>
-      <td>${v.id}</td><td>${v.voucher_no||'—'}</td><td>${v.voucher_date}</td><td>${v.beneficiary}</td>
-      <td>${fmt(v.amount)} ${v.currency}</td><td>${v.description||''}</td>
-      <td>${v.source_unit||'—'}</td>
-      <td><span class="badge b-${v.status}">${statusAr[v.status]}</span></td>
+      <td>${v.id}</td><td>${esc(v.voucher_no)||'—'}</td><td>${esc(v.voucher_date)}</td><td>${esc(v.beneficiary)}</td>
+      <td>${fmt(v.amount)} ${esc(v.currency)}</td><td>${esc(v.description)}</td>
+      <td>${esc(v.source_unit)||'—'}</td>
+      <td><span class="badge b-${esc(v.status)}">${esc(statusAr[v.status])}</span></td>
       <td>${v.file_path?`<button class="btn ghost sm" onclick="previewVoucher(${v.id})">معاينة</button>`:'—'}</td>
       <td>
         ${canApprove&&v.status==='draft'?`<button class="btn sm" onclick="setVoucherStatus(${v.id},'approved')">اعتماد</button>`:''}
@@ -1178,19 +1212,21 @@ async function loadVouchers(){
 }
 
 async function setVoucherStatus(id,status){
-  const r=await fetch('/vouchers/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({status})});
+  const r=await apiFetch('/vouchers/'+id,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({status})});
+  if(!r)return;
   if(r.ok)loadVouchers();else alert((await r.json()).detail);
 }
 
 async function deleteVoucher(id){
   if(!confirm('هل أنت متأكد من حذف هذا السند؟ هذا الإجراء لا يمكن التراجع عنه.'))return;
-  const r=await fetch('/vouchers/'+id,{method:'DELETE',headers:H()});
+  const r=await apiFetch('/vouchers/'+id,{method:'DELETE',headers:H()});
+  if(!r)return;
   if(r.ok)loadVouchers();else alert((await r.json()).detail);
 }
 
 async function previewVoucher(id){
-  const r=await fetch('/vouchers/'+id+'/file',{headers:H()});
-  if(!r.ok){alert('تعذّرت معاينة الملف');return;}
+  const r=await apiFetch('/vouchers/'+id+'/file',{headers:H()});
+  if(!r||!r.ok){alert('تعذّرت معاينة الملف');return;}
   const blob=await r.blob();const url=URL.createObjectURL(blob);
   const isPdf=blob.type==='application/pdf';
   document.getElementById('voucherPreviewPanel').classList.remove('hidden');
@@ -1217,8 +1253,8 @@ async function loadVoucherDashboard(){
   if(min)params.append('amount_min',min);
   if(max)params.append('amount_max',max);
   if(status)params.append('status',status);
-  const r=await fetch('/vouchers/summary?'+params.toString(),{headers:H()});
-  if(!r.ok) return;
+  const r=await apiFetch('/vouchers/summary?'+params.toString(),{headers:H()});
+  if(!r||!r.ok) return;
   const j=await r.json();
   const cards=[
     {n:j.counts.draft||0,t:'سندات مسودة',c:'s-amber'},
@@ -1247,7 +1283,8 @@ async function exportVoucherReport(format){
   if(max)params.append('amount_max',max);
   if(status)params.append('status',status);
   params.append('format',format);
-  const r=await fetch('/vouchers/report?'+params.toString(),{headers:H()});
+  const r=await apiFetch('/vouchers/report?'+params.toString(),{headers:H()});
+  if(!r)return;
   if(!r.ok){alert(await safeErr(r,'تعذّر إنشاء التقرير'));return;}
   const blob=await r.blob();
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=format==='pdf'?'vouchers_report.pdf':'vouchers_report.xlsx';a.click();
@@ -1267,8 +1304,8 @@ function auditMeta(action){return AUDIT_META[action]||{lbl:action,icon:'bi-activ
 
 async function loadAudit(){
   document.getElementById('auditBox').innerHTML='<div class="muted">جارٍ التحميل…</div>';
-  const r=await fetch('/audit',{headers:H()});
-  if(!r.ok){document.getElementById('auditBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
+  const r=await apiFetch('/audit',{headers:H()});
+  if(!r||!r.ok){document.getElementById('auditBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
   auditData=(await r.json()).audit||[];
   renderAuditStats();
   renderAuditFeed(auditData);
@@ -1295,17 +1332,17 @@ function renderAuditFeed(items){
   }
   box.innerHTML=items.map(x=>{
     const m=auditMeta(x.action);
-    const dt=(x.created_at||'').slice(0,16).replace('T',' ');
-    const detail=x.detail?`<div class="audit-detail">${x.detail}</div>`:'';
+    const dt=esc((x.created_at||'').slice(0,16).replace('T',' '));
+    const detail=x.detail?`<div class="audit-detail">${esc(x.detail)}</div>`:'';
     return `<div class="audit-item" id="ai-${x.id}">
       <div class="audit-icon ${m.cls}"><i class="bi ${m.icon}"></i></div>
       <div class="audit-body">
         <div class="audit-row1">
-          <span class="audit-action-lbl">${m.lbl}</span>
-          <span class="audit-tag ${m.tag}">${x.action}</span>
+          <span class="audit-action-lbl">${esc(m.lbl)}</span>
+          <span class="audit-tag ${m.tag}">${esc(x.action)}</span>
         </div>
         <div class="audit-meta">
-          <i class="bi bi-person-fill"></i><span>${x.username||'—'}</span>
+          <i class="bi bi-person-fill"></i><span>${esc(x.username)||'—'}</span>
           <span>·</span>
           <i class="bi bi-clock"></i><span>${dt}</span>
           <span>·</span><span style="opacity:.6">#${x.id}</span>
@@ -1330,7 +1367,8 @@ function filterAudit(){
 
 async function deleteAudit(id){
   if(!confirm('هل تريد حذف هذا السجل؟'))return;
-  const r=await fetch('/audit/'+id,{method:'DELETE',headers:H()});
+  const r=await apiFetch('/audit/'+id,{method:'DELETE',headers:H()});
+  if(!r)return;
   if(r.ok){
     auditData=auditData.filter(x=>x.id!==id);
     const el=document.getElementById('ai-'+id);
@@ -1340,7 +1378,8 @@ async function deleteAudit(id){
 
 async function clearAuditAll(){
   if(!confirm('هل أنت متأكد من حذف جميع سجلات النشاط؟ هذا الإجراء لا يمكن التراجع عنه.'))return;
-  const r=await fetch('/audit',{method:'DELETE',headers:H()});
+  const r=await apiFetch('/audit',{method:'DELETE',headers:H()});
+  if(!r)return;
   if(r.ok){auditData=[];renderAuditStats();renderAuditFeed([]);}
   else{alert((await r.json()).detail||'تعذّر الحذف');}
 }
@@ -1353,8 +1392,8 @@ const ROLE_BADGE_CLS={admin:'urb-admin',supervisor:'urb-supervisor',entry:'urb-e
 
 async function loadUsers(){
   document.getElementById('usersBox').innerHTML='<div class="muted">جارٍ التحميل…</div>';
-  const r=await fetch('/users',{headers:H()});
-  if(!r.ok){document.getElementById('usersBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
+  const r=await apiFetch('/users',{headers:H()});
+  if(!r||!r.ok){document.getElementById('usersBox').innerHTML='<div class="muted">تعذّر التحميل</div>';return;}
   usersData=(await r.json()).users||[];
   renderUsers();
 }
@@ -1363,15 +1402,15 @@ function renderUsers(){
   const box=document.getElementById('usersBox');
   if(!usersData.length){box.innerHTML='<div class="muted" style="grid-column:1/-1">لا يوجد مستخدمون</div>';return;}
   box.innerHTML=usersData.map((u,i)=>{
-    const initial=(u.full_name||u.username||'?')[0];
+    const initial=esc((u.full_name||u.username||'?')[0]);
     const canDel=u.id!==USER?.id;
     return `<div class="user-card" id="ucard-${u.id}" style="animation-delay:${i*0.06}s">
       <div class="user-avatar ${AVATAR_CLS[u.role]||'ua-entry'}">${initial}</div>
       <div class="user-body">
-        <div class="user-fullname">${u.full_name||'—'}</div>
-        <div class="user-uname"><i class="bi bi-at" style="font-size:11px"></i>${u.username}</div>
+        <div class="user-fullname">${esc(u.full_name)||'—'}</div>
+        <div class="user-uname"><i class="bi bi-at" style="font-size:11px"></i>${esc(u.username)}</div>
         <span class="user-role-badge ${ROLE_BADGE_CLS[u.role]||'urb-entry'}">
-          <i class="bi bi-shield-fill" style="font-size:9px"></i>${ROLE_AR[u.role]||u.role}
+          <i class="bi bi-shield-fill" style="font-size:9px"></i>${esc(ROLE_AR[u.role]||u.role)}
         </span>
       </div>
       <div class="user-card-actions">
@@ -1424,14 +1463,16 @@ async function saveUser(){
   try{
     if(editingUserId){
       const payload={role,full_name:fullName};
-      const r=await fetch('/users/'+editingUserId,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const r=await apiFetch('/users/'+editingUserId,{method:'PATCH',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!r)return;
       if(!r.ok){errEl.textContent=await safeErr(r,'خطأ');errEl.classList.remove('hidden');return;}
     }else{
       if(!fullName||!username||!password){errEl.textContent='الاسم واسم المستخدم وكلمة المرور مطلوبة';errEl.classList.remove('hidden');return;}
       const fd=new FormData();
       fd.append('full_name',fullName);fd.append('username',username);
       fd.append('role',role);fd.append('password',password);
-      const r=await fetch('/users',{method:'POST',headers:H(),body:fd});
+      const r=await apiFetch('/users',{method:'POST',headers:H(),body:fd});
+      if(!r)return;
       if(!r.ok){errEl.textContent=await safeErr(r,'خطأ');errEl.classList.remove('hidden');return;}
     }
     closeUserModal();loadUsers();
@@ -1441,7 +1482,8 @@ async function saveUser(){
 async function deleteUser(id){
   const u=usersData.find(x=>x.id===id);
   if(!confirm(`هل تريد حذف المستخدم "${u?.full_name||id}"؟ هذا الإجراء لا يمكن التراجع عنه.`))return;
-  const r=await fetch('/users/'+id,{method:'DELETE',headers:H()});
+  const r=await apiFetch('/users/'+id,{method:'DELETE',headers:H()});
+  if(!r)return;
   if(r.ok){
     usersData=usersData.filter(x=>x.id!==id);
     const el=document.getElementById('ucard-'+id);
@@ -1467,10 +1509,11 @@ async function loadDashboard(){
   initDashDate();
   try{
     const [runsRes,vSumRes,vListRes]=await Promise.all([
-      fetch('/runs',{headers:H()}),
-      fetch('/vouchers/summary',{headers:H()}),
-      fetch('/vouchers',{headers:H()})
+      apiFetch('/runs',{headers:H()}),
+      apiFetch('/vouchers/summary',{headers:H()}),
+      apiFetch('/vouchers',{headers:H()})
     ]);
+    if(!runsRes)return;
     const runs=(await runsRes.json()).runs||[];
     const vs=vSumRes.ok?await vSumRes.json():{counts:{},total_amount:0};
     const vouchers=vListRes.ok?((await vListRes.json()).vouchers||[]).slice(0,5):[];
@@ -1531,11 +1574,11 @@ async function loadDashboard(){
         <div class="act-dot ${r.status==='approved'?'green':'amber'}">
           <i class="bi ${r.status==='approved'?'bi-check-lg':'bi-hourglass-split'}"></i></div>
         <div>
-          <div class="act-title">تسوية #${r.id} — ${r.sheet||'—'}</div>
+          <div class="act-title">تسوية #${r.id} — ${esc(r.sheet)||'—'}</div>
           <div class="act-meta">
-            <span>${(r.created_at||'').slice(0,10)}</span>
+            <span>${esc((r.created_at||'').slice(0,10))}</span>
             <span>·</span><span>${r.matched} مطابقة</span>
-            <span>·</span><span class="badge b-${r.status}">${r.status==='approved'?'معتمدة':'مسودة'}</span>
+            <span>·</span><span class="badge b-${esc(r.status)}">${r.status==='approved'?'معتمدة':'مسودة'}</span>
           </div>
         </div>
       </div>`).join('');}
@@ -1551,10 +1594,10 @@ async function loadDashboard(){
         <div class="act-dot ${statusColor[v.status]||'blue'}">
           <i class="bi ${statusIcon[v.status]||'bi-receipt'}"></i></div>
         <div>
-          <div class="act-title">${v.beneficiary} — ${fmt(v.amount)} ${v.currency}</div>
+          <div class="act-title">${esc(v.beneficiary)} — ${fmt(v.amount)} ${esc(v.currency)}</div>
           <div class="act-meta">
-            <span>${v.voucher_date}</span>
-            <span>·</span><span class="badge b-${v.status}">${statusAr[v.status]||v.status}</span>
+            <span>${esc(v.voucher_date)}</span>
+            <span>·</span><span class="badge b-${esc(v.status)}">${esc(statusAr[v.status]||v.status)}</span>
           </div>
         </div>
       </div>`).join('');}
