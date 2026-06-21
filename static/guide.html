@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل المستخدم — نظام التسوية البنكية الآلية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1e3a5f;
+    --navy2:#2d5a8e;
+    --teal:#2bb5ae;
+    --green:#28c17b;
+    --amber:#f0a43a;
+    --red:#ff6b86;
+    --bg:#f5f7fa;
+    --ink:#1e2d3d;
+    --mut:#6b7d93;
+    --line:rgba(30,58,95,.09);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--ink);line-height:1.8;font-size:15px}
+
+  /* ── Header ── */
+  .cover{
+    background:linear-gradient(135deg,#1e3a5f 0%,#1a5f7a 50%,#2d5a8e 100%);
+    color:#fff;padding:56px 40px;text-align:center;
+    position:relative;overflow:hidden
+  }
+  .cover::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none}
+  .cover::after{content:'';position:absolute;bottom:-60px;left:60px;width:200px;height:200px;border-radius:50%;background:rgba(43,181,174,.15);pointer-events:none}
+  .cover-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#2bb5ae,#46a0ff);display:grid;place-items:center;font-size:28px;font-weight:800;color:#fff;margin:0 auto 20px;box-shadow:0 8px 28px rgba(0,0,0,.20)}
+  .cover h1{font-size:32px;font-weight:800;margin-bottom:8px;position:relative}
+  .cover p{font-size:16px;opacity:.80;position:relative}
+  .cover-meta{display:flex;justify-content:center;gap:28px;margin-top:28px;flex-wrap:wrap;position:relative}
+  .cover-tag{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:700}
+
+  /* ── Layout ── */
+  .container{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+
+  /* ── TOC ── */
+  .toc{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 32px;margin-bottom:40px;box-shadow:0 4px 20px rgba(100,140,180,.08)}
+  .toc h2{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .toc ol{padding-right:20px}
+  .toc li{margin-bottom:6px}
+  .toc a{color:var(--teal);text-decoration:none;font-weight:600;font-size:14px}
+  .toc a:hover{text-decoration:underline}
+
+  /* ── Sections ── */
+  .section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px;margin-bottom:28px;box-shadow:0 4px 20px rgba(100,140,180,.08)}
+  .section-hd{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:16px;border-bottom:1.5px solid var(--line)}
+  .section-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .ic-blue  {background:rgba(70,160,255,.12);color:#1a60c9}
+  .ic-teal  {background:rgba(43,181,174,.12);color:var(--teal)}
+  .ic-green {background:rgba(40,193,123,.12);color:#1a9461}
+  .ic-amber {background:rgba(240,164,58,.12); color:#b97312}
+  .ic-navy  {background:rgba(30,58,95,.10);  color:var(--navy)}
+  .ic-red   {background:rgba(255,107,134,.12);color:#c42044}
+  .section h2{font-size:19px;font-weight:800;color:var(--navy);margin:0}
+  .section h3{font-size:15px;font-weight:800;color:var(--navy);margin:22px 0 10px}
+  .section p{color:var(--ink);margin-bottom:12px}
+  .section ul,.section ol{padding-right:22px;margin-bottom:14px}
+  .section li{margin-bottom:6px;color:var(--ink)}
+
+  /* ── Steps ── */
+  .steps{counter-reset:step;display:flex;flex-direction:column;gap:14px;margin-top:6px}
+  .step{display:flex;gap:14px;align-items:flex-start}
+  .step-num{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-body strong{display:block;font-size:14px;color:var(--navy);margin-bottom:3px}
+  .step-body span{font-size:13.5px;color:var(--mut)}
+
+  /* ── Roles table ── */
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  th{background:rgba(30,58,95,.88);color:#fff;padding:11px 14px;text-align:right;font-weight:800}
+  td{padding:10px 14px;border-bottom:1px solid var(--line)}
+  tr:nth-child(even) td{background:rgba(30,58,95,.03)}
+  .check{color:var(--green);font-weight:800;font-size:16px}
+  .cross{color:var(--red);font-weight:800;font-size:16px}
+
+  /* ── Alert boxes ── */
+  .alert{border-radius:14px;padding:14px 18px;margin:16px 0;font-size:13.5px;display:flex;gap:12px;align-items:flex-start}
+  .alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+  .alert-body strong{display:block;margin-bottom:3px;font-size:14px}
+  .info  {background:rgba(70,160,255,.09);border:1px solid rgba(70,160,255,.20);color:#1a4a8a}
+  .warn  {background:rgba(240,164,58,.09); border:1px solid rgba(240,164,58,.22); color:#7a4d00}
+  .success{background:rgba(40,193,123,.09);border:1px solid rgba(40,193,123,.22);color:#0e5c34}
+
+  /* ── Badges ── */
+  .badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:800}
+  .b-admin{background:rgba(28,91,150,.12);color:#1c5b96;border:1px solid rgba(28,91,150,.20)}
+  .b-sup  {background:rgba(29,166,93,.12); color:#0f7d44;border:1px solid rgba(29,166,93,.20)}
+  .b-entry{background:rgba(232,154,24,.12);color:#c87510;border:1px solid rgba(232,154,24,.20)}
+  .b-draft{background:rgba(255,243,214,.95);color:#8e5d00;border:1px solid rgba(240,164,58,.25)}
+  .b-approved{background:rgba(220,245,230,.95);color:#176e3b;border:1px solid rgba(40,193,123,.25)}
+  .b-cancelled{background:rgba(255,230,236,.95);color:#b52d49;border:1px solid rgba(255,107,134,.25)}
+
+  /* ── Screen mockups ── */
+  .screen{background:rgba(30,58,95,.04);border:1.5px dashed rgba(30,58,95,.15);border-radius:14px;padding:18px;margin:16px 0;font-size:13px;color:var(--mut)}
+  .screen strong{color:var(--navy);display:block;margin-bottom:6px;font-size:13.5px}
+
+  /* ── Footer ── */
+  .footer{text-align:center;color:var(--mut);font-size:12.5px;padding-top:32px;border-top:1px solid var(--line);margin-top:12px}
+
+  /* ── Print ── */
+  @media print{
+    body{background:#fff}
+    .cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .section,.toc{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+    .no-print{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ COVER ════════ -->
+<div class="cover">
+  <div class="cover-logo">ت</div>
+  <h1>دليل المستخدم</h1>
+  <p>نظام التسوية البنكية الآلية — شرح شامل لجميع الوظائف</p>
+  <div class="cover-meta">
+    <span class="cover-tag">📅 الإصدار 2.0</span>
+    <span class="cover-tag">🌐 يعمل على المتصفح</span>
+    <span class="cover-tag">👥 3 مستويات صلاحية</span>
+  </div>
+</div>
+
+<!-- ════════ CONTAINER ════════ -->
+<div class="container">
+
+  <!-- ── فهرس المحتويات ── -->
+  <div class="toc">
+    <h2>📋 فهرس المحتويات</h2>
+    <ol>
+      <li><a href="#intro">نظرة عامة على النظام</a></li>
+      <li><a href="#login">تسجيل الدخول</a></li>
+      <li><a href="#roles">مستويات الصلاحيات</a></li>
+      <li><a href="#dashboard">لوحة التحكم الرئيسية</a></li>
+      <li><a href="#reconcile">تشغيل تسوية بنكية جديدة</a></li>
+      <li><a href="#history">سجل التسويات السابقة</a></li>
+      <li><a href="#vouchers">سندات الصرف</a></li>
+      <li><a href="#users">إدارة المستخدمين</a></li>
+      <li><a href="#audit">سجل التدقيق</a></li>
+      <li><a href="#tips">ملاحظات وتنبيهات مهمة</a></li>
+    </ol>
+  </div>
+
+  <!-- ══ 1. نظرة عامة ══ -->
+  <div class="section" id="intro">
+    <div class="section-hd">
+      <div class="section-icon ic-navy">🏦</div>
+      <h2>١. نظرة عامة على النظام</h2>
+    </div>
+    <p>
+      نظام التسوية البنكية الآلية هو تطبيق ويب متخصص يُساعد على <strong>مطابقة حركات الخزينة الداخلية مع كشف حساب البنك</strong> بشكل آلي وسريع، مع أرشفة سندات الصرف وإدارة المستخدمين وصلاحياتهم.
+    </p>
+
+    <h3>ما يقدمه النظام</h3>
+    <ul>
+      <li>مطابقة آلية بين ملف الخزينة (Excel) وكشف البنك (Excel)</li>
+      <li>تحديد الحركات المطابقة، المختلفة، أو غير الموجودة في أحد الطرفين</li>
+      <li>تصدير تقارير مفصّلة بصيغة Excel وPDF</li>
+      <li>أرشفة سندات الصرف مع إمكانية المسح الضوئي التلقائي</li>
+      <li>نظام اعتماد إلكتروني ثلاثي المراحل</li>
+      <li>سجل تدقيق كامل لجميع العمليات</li>
+    </ul>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body">
+        <strong>متطلبات التشغيل</strong>
+        متصفح حديث (Chrome / Edge / Firefox). لا حاجة لتثبيت أي برنامج إضافي.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 2. تسجيل الدخول ══ -->
+  <div class="section" id="login">
+    <div class="section-hd">
+      <div class="section-icon ic-blue">🔐</div>
+      <h2>٢. تسجيل الدخول</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>افتح رابط النظام في المتصفح</strong>
+          <span>سيظهر لك مباشرةً شاشة تسجيل الدخول</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>أدخل اسم المستخدم وكلمة المرور</strong>
+          <span>كما أعطاك إياها مدير النظام</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>اضغط "دخول" أو Enter</strong>
+          <span>سيتم توجيهك تلقائياً إلى لوحة التحكم</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body">
+        <strong>انتهاء الجلسة</strong>
+        تنتهي جلستك تلقائياً بعد <strong>8 ساعات</strong> من تسجيل الدخول. إذا رأيت شاشة الدخول فجأة، سجّل دخولك من جديد.
+      </div>
+    </div>
+
+    <h3>الحسابات الافتراضية (للتجربة فقط)</h3>
+    <table>
+      <tr><th>اسم المستخدم</th><th>كلمة المرور</th><th>الدور</th></tr>
+      <tr><td>admin</td><td>admin123</td><td><span class="badge b-admin">مدير النظام</span></td></tr>
+      <tr><td>supervisor</td><td>super123</td><td><span class="badge b-sup">مشرف</span></td></tr>
+      <tr><td>entry</td><td>entry123</td><td><span class="badge b-entry">موظف إدخال</span></td></tr>
+    </table>
+    <div class="alert warn">
+      <span class="alert-icon">🔒</span>
+      <div class="alert-body">
+        <strong>تغيير كلمات المرور</strong>
+        يجب تغيير كلمات المرور الافتراضية فور بدء الاستخدام الفعلي. يقوم بذلك مدير النظام من قسم "المستخدمون".
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 3. الصلاحيات ══ -->
+  <div class="section" id="roles">
+    <div class="section-hd">
+      <div class="section-icon ic-navy">👥</div>
+      <h2>٣. مستويات الصلاحيات</h2>
+    </div>
+    <p>يحتوي النظام على ثلاثة مستويات صلاحيات:</p>
+
+    <table>
+      <tr>
+        <th>العملية</th>
+        <th><span class="badge b-entry">موظف إدخال</span></th>
+        <th><span class="badge b-sup">مشرف</span></th>
+        <th><span class="badge b-admin">مدير النظام</span></th>
+      </tr>
+      <tr>
+        <td>تشغيل تسوية جديدة</td>
+        <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>عرض السجلات والتقارير</td>
+        <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>إضافة سندات صرف</td>
+        <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>اعتماد التسويات والسندات</td>
+        <td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>تعديل وحذف التسويات</td>
+        <td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>إدارة المستخدمين</td>
+        <td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td>
+      </tr>
+      <tr>
+        <td>سجل التدقيق</td>
+        <td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══ 4. لوحة التحكم ══ -->
+  <div class="section" id="dashboard">
+    <div class="section-hd">
+      <div class="section-icon ic-teal">📊</div>
+      <h2>٤. لوحة التحكم الرئيسية</h2>
+    </div>
+    <p>عند تسجيل الدخول، تظهر لك لوحة التحكم التي تعرض:</p>
+
+    <ul>
+      <li><strong>بطاقات KPI:</strong> إجمالي التسويات، المعتمدة، المسودات، وعدد سندات الصرف المعتمدة</li>
+      <li><strong>مخطط بياني:</strong> نشاط التسويات الشهرية خلال الأشهر الستة الأخيرة</li>
+      <li><strong>توزيع حالات السندات:</strong> مسودة / معتمدة / ملغاة</li>
+      <li><strong>آخر التسويات وآخر السندات:</strong> نظرة سريعة على أحدث العمليات</li>
+    </ul>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body">
+        <strong>التنقل بين الأقسام</strong>
+        استخدم شريط التنقل العلوي للتنقل بين: التسوية الجديدة، السجل، سندات الصرف، وأقسام الإدارة (للمدير فقط).
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 5. التسوية ══ -->
+  <div class="section" id="reconcile">
+    <div class="section-hd">
+      <div class="section-icon ic-teal">🔄</div>
+      <h2>٥. تشغيل تسوية بنكية جديدة</h2>
+    </div>
+
+    <h3>قبل البدء — تجهيز الملفات</h3>
+    <ul>
+      <li><strong>ملف الخزينة (دفتر الأستاذ):</strong> ملف Excel يحتوي على أعمدة: رقم مرجعي، تاريخ، مبلغ، بيان</li>
+      <li><strong>كشف البنك:</strong> ملف Excel مصدّر من البنك</li>
+    </ul>
+
+    <h3>خطوات التشغيل</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>رفع ملف الخزينة</strong>
+          <span>اضغط على منطقة "اضغط لاختيار ملف الخزينة" وحدد الملف من جهازك</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>اختيار ورقة العمل</strong>
+          <span>إذا احتوى الملف على أكثر من ورقة، اختر الورقة الصحيحة من القائمة المنسدلة</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>رفع كشف البنك</strong>
+          <span>اضغط على منطقة "اضغط لاختيار كشف البنك" وحدد الملف</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>تشغيل المطابقة</strong>
+          <span>اضغط زر "تشغيل المطابقة" وانتظر ظهور النتائج (عادةً أقل من ثانية)</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>فهم النتائج</h3>
+    <table>
+      <tr><th>الفئة</th><th>المعنى</th></tr>
+      <tr><td>✅ دفعات مطابقة</td><td>حركات موجودة في الخزينة والبنك بنفس المبلغ</td></tr>
+      <tr><td>⚠️ فرق في الإجمالي</td><td>نفس الرقم المرجعي لكن بمبالغ مختلفة</td></tr>
+      <tr><td>📒 في النظام فقط</td><td>حركات في الخزينة لم تظهر في كشف البنك بعد</td></tr>
+      <tr><td>🏦 في البنك فقط</td><td>حركات في البنك غير مسجّلة في الخزينة</td></tr>
+      <tr><td>🔁 صرف مكرر</td><td>حركات مشبوهة بالتكرار في نفس اليوم</td></tr>
+    </table>
+
+    <h3>تحميل التقرير</h3>
+    <p>بعد ظهور النتائج، اضغط <strong>"تحميل تقرير Excel الملوّن"</strong> للحصول على تقرير مفصّل بالألوان لكل فئة.</p>
+
+    <div class="alert success">
+      <span class="alert-icon">✅</span>
+      <div class="alert-body">
+        <strong>الحفظ التلقائي</strong>
+        كل تسوية تُشغَّل تُحفظ تلقائياً في قاعدة البيانات بحالة "مسودة"، ويمكن للمشرف اعتمادها لاحقاً من قسم السجل.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 6. سجل التسويات ══ -->
+  <div class="section" id="history">
+    <div class="section-hd">
+      <div class="section-icon ic-navy">📋</div>
+      <h2>٦. سجل التسويات السابقة</h2>
+    </div>
+    <p>يعرض هذا القسم جميع التسويات المحفوظة مرتّبةً من الأحدث إلى الأقدم.</p>
+
+    <h3>قراءة الجدول</h3>
+    <table>
+      <tr><th>العمود</th><th>المعنى</th></tr>
+      <tr><td>#</td><td>رقم التسوية التسلسلي</td></tr>
+      <tr><td>الشهر</td><td>اسم ورقة العمل المستخدمة</td></tr>
+      <tr><td>التاريخ</td><td>وقت تشغيل التسوية</td></tr>
+      <tr><td>المنشئ</td><td>الموظف الذي شغّل التسوية</td></tr>
+      <tr><td>مطابقة</td><td>عدد الحركات المطابقة</td></tr>
+      <tr><td>تنبيهات</td><td>إجمالي الحركات التي تحتاج مراجعة</td></tr>
+      <tr><td>الحالة</td><td><span class="badge b-draft">مسودة</span> أو <span class="badge b-approved">معتمدة</span></td></tr>
+    </table>
+
+    <h3>اعتماد تسوية (المشرف والمدير)</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>اضغط على أي صف في الجدول</strong>
+          <span>ستظهر تفاصيل التسوية أسفل الجدول</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>راجع النتائج والتفاصيل</strong>
+          <span>تصفّح التبويبات (مطابقة، فروق، إلخ) للتأكد من صحة البيانات</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>اضغط "اعتماد التسوية"</strong>
+          <span>تتحول الحالة من مسودة إلى معتمدة ولا يمكن التراجع عنها إلا من المدير</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 7. سندات الصرف ══ -->
+  <div class="section" id="vouchers">
+    <div class="section-hd">
+      <div class="section-icon ic-green">🧾</div>
+      <h2>٧. سندات الصرف</h2>
+    </div>
+    <p>قسم خاص بأرشفة سندات الصرف الورقية إلكترونياً مع إمكانية المسح التلقائي.</p>
+
+    <h3>إضافة سند جديد</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>رفع صورة أو PDF السند (اختياري)</strong>
+          <span>اضغط على منطقة "اضغط لاختيار ملف السند" وحدد الصورة أو PDF. سيقوم النظام بقراءة البيانات تلقائياً إذا كان النص واضحاً.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>تحقق من البيانات المعبّأة تلقائياً أو أدخلها يدوياً</strong>
+          <span>رقم السند، التاريخ، المبلغ، الجهة/الخزينة، اسم المستفيد، البيان</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>اضغط "حفظ السند"</strong>
+          <span>يُحفظ السند بحالة "مسودة" وينتظر اعتماد المشرف</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🤖</span>
+      <div class="alert-body">
+        <strong>المسح التلقائي (OCR)</strong>
+        عند رفع صورة واضحة للسند، يحاول النظام قراءة البيانات تلقائياً. راجع دائماً ما تم قراءته قبل الحفظ وصحّح أي خطأ.
+      </div>
+    </div>
+
+    <h3>حالات السند</h3>
+    <table>
+      <tr><th>الحالة</th><th>المعنى</th><th>من يغيّرها؟</th></tr>
+      <tr><td><span class="badge b-draft">مسودة</span></td><td>تم الإدخال، ينتظر المراجعة</td><td>—</td></tr>
+      <tr><td><span class="badge b-approved">معتمد</span></td><td>تمت المراجعة والاعتماد</td><td>المشرف / المدير</td></tr>
+      <tr><td><span class="badge b-cancelled">ملغي</span></td><td>تم إلغاء السند</td><td>المشرف / المدير</td></tr>
+    </table>
+
+    <h3>تصدير تقرير السندات</h3>
+    <p>من أعلى قائمة السندات توجد أزرار لتصدير التقرير:</p>
+    <ul>
+      <li><strong>Excel:</strong> جدول بيانات لكل السندات المُصفَّاة</li>
+      <li><strong>PDF:</strong> تقرير احترافي جاهز للطباعة مع ملخص إحصائي</li>
+    </ul>
+
+    <h3>البحث والتصفية</h3>
+    <p>يمكنك تصفية السندات حسب: نص البحث، تاريخ من/إلى، مجال المبلغ، الحالة.</p>
+  </div>
+
+  <!-- ══ 8. المستخدمون ══ -->
+  <div class="section" id="users">
+    <div class="section-hd">
+      <div class="section-icon ic-amber">👤</div>
+      <h2>٨. إدارة المستخدمين <span style="font-size:13px;color:var(--mut);font-weight:600">(مدير النظام فقط)</span></h2>
+    </div>
+
+    <h3>إضافة مستخدم جديد</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>اذهب إلى قسم "المستخدمون" من شريط التنقل</strong>
+          <span>يظهر هذا القسم للمدير فقط</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>اضغط "إضافة مستخدم جديد"</strong>
+          <span>أدخل الاسم الكامل، اسم المستخدم، الدور، وكلمة مرور قوية (6 أحرف على الأقل)</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>اضغط "حفظ"</strong>
+          <span>يُضاف المستخدم فوراً ويمكنه تسجيل الدخول</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>تعديل مستخدم</h3>
+    <p>اضغط أيقونة القلم ✏️ على بطاقة المستخدم لتعديل اسمه أو دوره.</p>
+
+    <h3>حذف مستخدم</h3>
+    <p>اضغط أيقونة الحذف 🗑️ على بطاقة المستخدم. <strong>لا يمكن حذف حسابك الخاص.</strong></p>
+
+    <div class="alert warn">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body">
+        <strong>الحذف نهائي</strong>
+        حذف المستخدم لا يمكن التراجع عنه. تأكد قبل الحذف.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 9. سجل التدقيق ══ -->
+  <div class="section" id="audit">
+    <div class="section-hd">
+      <div class="section-icon ic-red">🛡️</div>
+      <h2>٩. سجل التدقيق <span style="font-size:13px;color:var(--mut);font-weight:600">(مدير النظام فقط)</span></h2>
+    </div>
+    <p>يسجّل النظام تلقائياً كل العمليات المهمة مع تاريخها ومنفّذها:</p>
+    <ul>
+      <li>تسجيل الدخول لكل مستخدم</li>
+      <li>تشغيل أي تسوية جديدة</li>
+      <li>اعتماد أو حذف التسويات</li>
+      <li>إضافة أو تعديل أو حذف سندات الصرف</li>
+      <li>إنشاء أو تعديل أو حذف المستخدمين</li>
+      <li>تصدير التقارير</li>
+    </ul>
+
+    <h3>البحث في السجل</h3>
+    <p>يمكن البحث بالاسم أو نوع العملية، وتصفية السجل لعرض نوع عملية بعينها.</p>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div class="alert-body">
+        <strong>أهمية السجل</strong>
+        يُستخدم سجل التدقيق لمراجعة من قام بأي عملية ومتى، وهو مرجع أساسي عند وجود أي استفسار أو خلاف.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 10. تنبيهات ══ -->
+  <div class="section" id="tips">
+    <div class="section-hd">
+      <div class="section-icon ic-amber">💡</div>
+      <h2>١٠. ملاحظات وتنبيهات مهمة</h2>
+    </div>
+
+    <h3>تنسيق ملفات Excel</h3>
+    <ul>
+      <li>يجب أن يحتوي ملف الخزينة على <strong>رقم مرجعي، تاريخ، مبلغ</strong> على الأقل</li>
+      <li>الأعمدة لا تحتاج اسماً محدداً، النظام يكتشفها تلقائياً</li>
+      <li>الملفات المدعومة: <strong>xlsx, xls</strong></li>
+    </ul>
+
+    <h3>ملفات السندات</h3>
+    <ul>
+      <li>الصيغ المدعومة: <strong>PDF، JPG، PNG، WEBP، BMP</strong></li>
+      <li>كلما كانت الصورة أوضح، كانت نتائج القراءة التلقائية أدق</li>
+      <li>الحجم الأقصى للملف يعتمد على إعدادات الخادم</li>
+    </ul>
+
+    <h3>الأمان</h3>
+    <ul>
+      <li>لا تشارك بيانات دخولك مع أي شخص آخر</li>
+      <li>اضغط "خروج" عند مغادرة الجهاز</li>
+      <li>استخدم كلمات مرور قوية لا تقل عن 8 أحرف تشمل أرقاماً وحروفاً</li>
+    </ul>
+
+    <div class="alert warn">
+      <span class="alert-icon">🔄</span>
+      <div class="alert-body">
+        <strong>النسخ الاحتياطي</strong>
+        يُنصح بأخذ نسخة احتياطية من قاعدة البيانات بشكل دوري. تواصل مع مسؤول النظام لترتيب ذلك.
+      </div>
+    </div>
+
+    <h3>عند مواجهة مشكلة</h3>
+    <ul>
+      <li>أعِد تحميل الصفحة (F5) وجرّب مرة أخرى</li>
+      <li>تأكد من اتصال الإنترنت إذا كان النظام على سيرفر خارجي</li>
+      <li>إذا استمرت المشكلة، تواصل مع مسؤول النظام وأخبره بالعملية التي كنت تقوم بها</li>
+    </ul>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>نظام التسوية البنكية الآلية — جميع الحقوق محفوظة</p>
+    <p style="margin-top:6px">للدعم الفني تواصل مع مسؤول النظام</p>
+  </div>
+
+</div>
+
+</body>
+</html>
